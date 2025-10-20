@@ -79,6 +79,7 @@ export class UserAuthService {
     
     const payload = data;
     const token = await this.jwtService.signAsync(data)
+    console.log(token)
      return {
     token,
     user: {
