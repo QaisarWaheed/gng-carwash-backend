@@ -4,13 +4,9 @@ import {
   Controller,
   Delete,
   Get,
-  HttpException,
-  HttpStatus,
-  Inject,
   Param,
   Patch,
   Post,
-  Put,
   UseGuards,
 } from '@nestjs/common';
 import { UserAuthService } from '../../services/userAuth.service';
@@ -22,6 +18,7 @@ import { UpdateWorkerDto } from '../../dtos/UpdateWorker.dto';
 import { Role } from 'src/types/enum.class';
 import { Roles } from 'src/decorators/Roles.decorator';
 import { AuthGuardWithRoles } from 'src/guards/AuthGuard';
+import { request } from 'express';
 @ApiTags('User-Auth')
 @Controller('user-auth')
 @ApiBearerAuth()
@@ -66,11 +63,15 @@ export class UserAuthController {
     return await this.userAuthService.getAllUsers();
   }
 
-  // @Get('getAll/:role')
-  // async findAllWorkers(@Param('role') role: role) {
-  //   return await this.userAuthService.getAll(role);
-  // }
+  @UseGuards(AuthGuardWithRoles)
+  @Roles(Role.Admin)
+  @Get('getAll/:role')
+  async findAllWorkers(@Param('role') role: Role) {
+    return await this.userAuthService.getAll(role);
+  }
 
+  @UseGuards(AuthGuardWithRoles)
+  @Roles(Role.Admin)
   @Post('create-employee')
   async createEmployee(@Body() data: UserAuthDto) {
     const newEmployee = await this.userAuthService.createEmployee(data);
@@ -85,11 +86,15 @@ export class UserAuthController {
     return newEmployee;
   }
 
+  @UseGuards(AuthGuardWithRoles)
+  @Roles(Role.Admin)
   @Patch('update-worker/:id')
   async updateWorker(@Param('id') id: string, @Body() data: UpdateWorkerDto) {
     return await this.userAuthService.updateWorker(id, data);
   }
 
+  @UseGuards(AuthGuardWithRoles)
+  @Roles(Role.Admin)
   @Delete('delete-worker/:id')
   async deleteWorker(@Param('id') id: string) {
     return await this.userAuthService.deleteWorker(id);

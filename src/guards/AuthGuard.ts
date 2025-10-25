@@ -16,15 +16,14 @@ export class AuthGuardWithRoles extends AuthGuard('jwt') {
   }
 
   handleRequest(err, user, info, context: ExecutionContext) {
-    if (err || !user) {
-      throw err || new ForbiddenException('Unauthorized');
-    }
+    console.log(err, info);
+    const request = context.switchToHttp().getRequest();
 
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-
+    console.log(requiredRoles);
     if (!requiredRoles) return user;
 
     const hasRole = requiredRoles
@@ -32,6 +31,7 @@ export class AuthGuardWithRoles extends AuthGuard('jwt') {
       .includes(user.role.toLowerCase());
 
     if (!hasRole) {
+      console.log(hasRole);
       throw new ForbiddenException('You do not have permission for this route');
     }
 

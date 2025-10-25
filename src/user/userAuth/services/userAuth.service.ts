@@ -15,12 +15,14 @@ import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from '../dtos/Login.dto';
 import { UpdateWorkerDto } from '../dtos/UpdateWorker.dto';
 import { AdminLoginDto } from '../dtos/adminLogin.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserAuthService {
   constructor(
     @InjectModel('UserAuth') private readonly userAuthModel: Model<UserAuth>,
     private jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async signup(data: UserAuthDto): Promise<UserAuth> {
@@ -76,7 +78,9 @@ export class UserAuthService {
       role: user.role, // user role (important!)
     };
 
-    const token = await this.jwtService.signAsync(payload);
+    const token = await this.jwtService.signAsync(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+    });
     console.log(token);
     return {
       success: true,
