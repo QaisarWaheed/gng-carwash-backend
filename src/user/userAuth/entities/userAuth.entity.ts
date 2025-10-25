@@ -24,13 +24,13 @@ export class UserAuth {
     enum: ['User', 'Admin', 'Employee', 'Manager'],
     default: 'User',
   })
-  roles: Roles;
-   
-  @Prop({ type: String, required: false })
-otp?: string;
+  role: Roles;
 
-@Prop({ type: Date, required: false })
-otpExpiresAt?: Date;
+  @Prop({ type: String, required: false })
+  otp?: string;
+
+  @Prop({ type: Date, required: false })
+  otpExpiresAt?: Date;
 
   declare createAt: Date;
   declare updatedAt: Date;

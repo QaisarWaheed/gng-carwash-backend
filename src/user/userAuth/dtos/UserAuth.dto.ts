@@ -1,19 +1,19 @@
-import { ApiProperty } from "@nestjs/swagger";
-import type { Roles } from "../entities/userAuth.entity";
+import { ApiProperty } from '@nestjs/swagger';
+import type { Roles } from '../entities/userAuth.entity';
 
-export class UserAuthDto{
-    @ApiProperty()
-    fullName:string
+export class UserAuthDto {
+  @ApiProperty({ default: 'manager' })
+  fullName: string;
 
-    @ApiProperty()
-    email:string
+  @ApiProperty({ default: 'manager@gmail.com' })
+  email: string;
 
-    @ApiProperty()
-    phoneNumber:string
+  @ApiProperty({ default: '12345678907' })
+  phoneNumber: string;
 
-    @ApiProperty()
-    password:string
+  @ApiProperty({ default: 'manager' })
+  password: string;
 
-    @ApiProperty()
-    roles:Roles
+  @ApiProperty({ default: 'Manager' })
+  role: Roles;
 }
