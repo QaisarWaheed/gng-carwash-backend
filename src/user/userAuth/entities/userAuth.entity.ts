@@ -26,6 +26,8 @@ export class UserAuth {
   })
   role: Roles;
 
+
+
   @Prop({ type: String, required: false })
   otp?: string;
 

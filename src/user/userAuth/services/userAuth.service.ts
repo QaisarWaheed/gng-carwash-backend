@@ -23,7 +23,7 @@ export class UserAuthService {
     @InjectModel('UserAuth') private readonly userAuthModel: Model<UserAuth>,
     private jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async signup(data: UserAuthDto): Promise<UserAuth> {
     const { email, phoneNumber } = data;
@@ -79,7 +79,7 @@ export class UserAuthService {
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get('JWT_SECRET'),
+      secret: 'a-string-secret-at-least-256-bits-long',
     });
     console.log(token);
     return {

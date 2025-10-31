@@ -15,7 +15,7 @@ import { ConfigService } from '@nestjs/config';
     JwtModule.register({
       global: true,
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '60s' },
+      signOptions: { expiresIn: '3600s' },
     }),
     MongooseModule.forFeature([
       { name: UserAuth.name, schema: userAuthSchema },

@@ -1,0 +1,72 @@
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsMongoId,
+  ValidateNested,
+  IsDateString,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+
+class LocationDto {
+  @IsNumber()
+  lat: number;
+
+  @IsNumber()
+  lng: number;
+
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+}
+
+export class CreateBookingDto {
+  @ApiProperty()
+  @IsMongoId()
+  @IsNotEmpty()
+  customerId: string;
+
+  @ApiProperty()
+  @IsMongoId()
+  @IsNotEmpty()
+  vehicleId: string;
+
+  @ApiProperty()
+  @IsMongoId()
+  @IsNotEmpty()
+  serviceId: string;
+
+  @ApiProperty()
+  @IsDateString()
+  @IsNotEmpty()
+  date: Date;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  timeSlot: string;
+
+  @ApiProperty()
+  @ValidateNested()
+  @Type(() => LocationDto)
+  @IsNotEmpty()
+  location: LocationDto;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(['Pending', 'Assigned', 'InProgress', 'Completed', 'Cancelled'])
+  status?: 'Pending' | 'Assigned' | 'InProgress' | 'Completed' | 'Cancelled';
+
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  totalPrice: number;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEnum(['Unpaid', 'Paid', 'Refunded'])
+  paymentStatus?: 'Unpaid' | 'Paid' | 'Refunded';
+}
