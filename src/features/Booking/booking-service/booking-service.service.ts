@@ -33,7 +33,7 @@ export class BookingServiceService {
     async getBookingById(id: string): Promise<Booking> {
         const getByID = await this.bookingModel.findOne({ _id: id });
         if (!getByID) {
-            throw new NotFoundException("test")
+            throw new NotFoundException("booking not found")
         }
 
         return getByID
@@ -126,7 +126,7 @@ export class BookingServiceService {
         if (booking.status !== 'Completed')
             throw new BadRequestException('You can only review completed bookings');
 
-        if (booking.reviewInfo?.isReviewed) {
+        if (booking.isReviewed) {
             throw new BadRequestException('This booking has already been reviewed');
         }
 
@@ -164,6 +164,9 @@ export class BookingServiceService {
                 { $push: { flags: flag } },
             );
         }
+
+        booking.isReviewed = true;
+        await booking.save();
 
         return { message: 'Review submitted successfully' };
     }

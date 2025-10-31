@@ -64,15 +64,10 @@ export class Booking {
 
 
   @Prop({
-    type: {
-      isReviewed: { type: Boolean, default: false },
-      reviewId: { type: Types.ObjectId, ref: 'Review', default: null },
-    },
+    isReviewed: { type: Boolean, default: false },
   })
-  reviewInfo: {
-    isReviewed: boolean;
-    reviewId: Types.ObjectId | null;
-  };
+  isReviewed: boolean;
+
 
 
   @Prop({
