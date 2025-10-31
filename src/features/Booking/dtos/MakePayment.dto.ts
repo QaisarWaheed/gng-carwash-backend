@@ -2,8 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsOptional } from "class-validator";
 
 export class MakeBookingPayment {
-    @ApiProperty()
-    bookingId: string
+
 
     @ApiProperty()
     customerId: string
@@ -18,16 +17,14 @@ export class MakeBookingPayment {
 
     @ApiProperty({
         type: String,
-        enum: ['Cash', 'Card'],
-        default: 'Cash',
+        enum: ['Card'],
+        default: 'Card',
     })
-    paymentMethod: 'Cash' | 'Card';
+    paymentMethod: 'Card';
 
 
     @ApiProperty()
     amount: number
 
-    @ApiProperty()
-    @IsOptional()
-    transactionId?: string
+
 }

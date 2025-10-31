@@ -10,8 +10,5 @@ export class UpdateBookingDto extends PartialType(CreateBookingDto) {
   status?: 'Pending' | 'Assigned' | 'InProgress' | 'Completed' | 'Cancelled';
 
 
-  @ApiProperty()
-  @IsOptional()
-  @IsEnum(['Unpaid', 'Paid', 'Refunded'])
-  paymentStatus?: 'Unpaid' | 'Paid' | 'Refunded';
+
 }

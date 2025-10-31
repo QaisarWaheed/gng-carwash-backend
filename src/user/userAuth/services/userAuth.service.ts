@@ -6,9 +6,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Roles, UserAuth } from '../entities/userAuth.entity';
-import { Model } from 'mongoose';
+import { Connection, Model, Types } from 'mongoose';
 import { UserAuthDto } from '../dtos/UserAuth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -16,14 +16,31 @@ import { LoginDto } from '../dtos/Login.dto';
 import { UpdateWorkerDto } from '../dtos/UpdateWorker.dto';
 import { AdminLoginDto } from '../dtos/adminLogin.dto';
 import { ConfigService } from '@nestjs/config';
+import { Employee } from 'src/user/employee/entities/Employeet.entity';
 
 @Injectable()
 export class UserAuthService {
   constructor(
     @InjectModel('UserAuth') private readonly userAuthModel: Model<UserAuth>,
+    @InjectModel('Employee') private readonly employeeModel: Model<Employee>,
+    @InjectConnection() private readonly connection: Connection,
+
     private jwtService: JwtService,
     private readonly configService: ConfigService,
   ) { }
+
+
+
+  async getById(id: string): Promise<UserAuth | Employee> {
+    let user = await this.userAuthModel.findById(id);
+
+    if (!user) {
+      throw new NotFoundException("no user or employee found");
+    }
+    return user;
+  }
+
+
 
   async signup(data: UserAuthDto): Promise<UserAuth> {
     const { email, phoneNumber } = data;
@@ -185,27 +202,49 @@ export class UserAuthService {
     return await this.userAuthModel.find({ role: role });
   }
 
-  async createEmployee(data: UserAuthDto): Promise<UserAuth> {
-    const { email, phoneNumber } = data;
-    const existingUser = await this.userAuthModel.findOne({
-      $or: [{ email }, { phoneNumber }],
-    });
+  async createEmployee(dto: UserAuthDto): Promise<Employee | null> {
 
-    if (existingUser) {
-      if (existingUser.email === email)
-        throw new BadRequestException('Email is already taken');
-      if (existingUser.phoneNumber === phoneNumber)
-        throw new BadRequestException('Phone number is already taken');
+
+    try {
+
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+      const user = await this.userAuthModel.create(
+        [
+          {
+            name: dto.fullName,
+            email: dto.email,
+            phone: dto.phoneNumber,
+            password: hashedPassword,
+            role: 'Employee',
+          },
+        ],
+
+      );
+
+      const employee = await this.employeeModel.create(
+        [
+          {
+            userId: user[0]._id,
+            status: 'active',
+            assignedBookings: [],
+            averageRating: 0,
+            completedJobs: 0,
+            flags: [],
+          },
+        ],
+
+      );
+
+
+
+      return this.employeeModel
+        .findById(employee[0]._id)
+        .populate('userId', 'name email role phone');
+    } catch (error) {
+
+      throw new BadRequestException(error.message);
     }
-
-    const saltOrRounds = 12;
-    const hashedPassword = await bcrypt.hash(data.password, saltOrRounds);
-    data.password = hashedPassword;
-    data.role = 'Employee';
-
-    const newUser = this.userAuthModel.create(data);
-
-    return newUser;
   }
 
   async createManager(data: UserAuthDto): Promise<UserAuth> {

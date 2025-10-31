@@ -1,11 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
 
 export type BookingDocument = Booking & Document;
 
 @Schema({ timestamps: true })
 export class Booking {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+
+  declare _id: mongoose.Types.ObjectId
+
+
+  @Prop({ type: Types.ObjectId, ref: 'UserAuth', required: true })
   customerId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true })
@@ -14,10 +18,10 @@ export class Booking {
   @Prop({ type: Types.ObjectId, ref: 'Service', required: true })
   serviceId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  @Prop({ type: Types.ObjectId, ref: 'UserAuth', default: null })
   assignedManagerId: Types.ObjectId | null;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  @Prop({ type: Types.ObjectId, ref: 'UserAuth', default: null })
   assignedEmployeeId: Types.ObjectId | null;
 
   @Prop({ type: Date, required: true })
@@ -33,6 +37,7 @@ export class Booking {
       address: { type: String, required: true },
     },
     required: true,
+    _id: false
   })
   location: {
     lat: number;
@@ -59,11 +64,23 @@ export class Booking {
 
 
   @Prop({
-    type: String,
-    enum: ['Cash', 'Card'],
-    default: 'Cash',
+    type: {
+      isReviewed: { type: Boolean, default: false },
+      reviewId: { type: Types.ObjectId, ref: 'Review', default: null },
+    },
   })
-  paymentMethod: 'Cash' | 'Card';
+  reviewInfo: {
+    isReviewed: boolean;
+    reviewId: Types.ObjectId | null;
+  };
+
+
+  @Prop({
+    type: String,
+    enum: ['Card'],
+    default: 'Card',
+  })
+  paymentMethod: 'Card';
 
 
   @Prop()

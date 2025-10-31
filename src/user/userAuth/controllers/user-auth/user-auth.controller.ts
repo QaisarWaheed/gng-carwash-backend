@@ -18,12 +18,11 @@ import { UpdateWorkerDto } from '../../dtos/UpdateWorker.dto';
 import { Role } from 'src/types/enum.class';
 import { Roles } from 'src/decorators/Roles.decorator';
 import { AuthGuardWithRoles } from 'src/guards/AuthGuard';
-import { request } from 'express';
 @ApiTags('User-Auth')
 @Controller('user-auth')
 @ApiBearerAuth()
 export class UserAuthController {
-  constructor(private readonly userAuthService: UserAuthService) {}
+  constructor(private readonly userAuthService: UserAuthService) { }
 
   @Post('signup')
   async signupUser(@Body() data: UserAuthDto) {

@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { BookingServiceService } from '../../booking-service/booking-service.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateBookingDto } from '../../dtos/CreateBookingDto';
@@ -8,11 +8,16 @@ import { Role } from 'src/types/enum.class';
 import { AssignEmployeeDto } from '../../dtos/AssignEmployeeDto';
 import { MakeBookingPayment } from '../../dtos/MakePayment.dto';
 import { UpdateBookingDto } from '../../dtos/UpdateBookingDto';
+import { CreateReviewDto } from '../../dtos/ReviewbookingDto';
+import { ResolveFlagDto } from '../../dtos/ResolveFlagDto';
+import { Types } from 'mongoose';
 
 @ApiTags("Booking")
-@Controller('booking')
 @ApiBearerAuth()
-export class BookingcontrollerController {
+@Controller('booking')
+
+export class BookingController {
+    private readonly logger = new Logger(BookingController.name);
     constructor(private readonly bookingServiceService: BookingServiceService) { }
 
 
@@ -31,7 +36,7 @@ export class BookingcontrollerController {
 
     @UseGuards(AuthGuardWithRoles)
     @Roles(Role.User)
-    @Get(':userId')
+    @Get('user-bookings/:userId')
     async getAllBookingsByUserId(@Param('userId') userId: string) {
         try {
             return await this.bookingServiceService.getBookingByUserId(userId);
@@ -45,7 +50,12 @@ export class BookingcontrollerController {
 
     @Get(':id')
     async getBookingById(@Param('id') id: string) {
+        this.logger.log(`Controller reached with id: ${id}`);
         try {
+            if (!Types.ObjectId.isValid(id)) {
+                throw new BadRequestException('Invalid booking ID');
+            }
+
             const booking = await this.bookingServiceService.getBookingById(id)
             if (!booking) {
                 throw new NotFoundException(`Booking with Id: ${id} not found`)
@@ -77,30 +87,44 @@ export class BookingcontrollerController {
     @Put('assignEmployee/:bookingId')
     async assignEmployee(@Param('bookingId') bookingId: string, @Body() data: AssignEmployeeDto) {
         try {
-            return await this.bookingServiceService.assignEmployee(bookingId, data)
+            return await this.bookingServiceService.assignEmployee(bookingId, data.assignedEmployeeId)
         }
         catch (e) {
-            throw new HttpException(e.message, HttpStatus.BAD_REQUEST)
+            if (e instanceof HttpException) throw e;
+            throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
         }
     }
 
 
     @UseGuards(AuthGuardWithRoles)
-    @Roles(Role.Employee && Role.Manager)
-    @Put('update-booking-status/:id')
-    async updateBooking(@Param('id') id: string, @Body() data: UpdateBookingDto) {
+    @Roles(Role.Employee)
+    @Put('employee/update-booking-status/:id')
+    async employeeupdateBooking(@Param('id') id: string, @Body() data: UpdateBookingDto) {
         try {
-            return await this.bookingServiceService.updateBooking(id, data)
+            return await this.bookingServiceService.EmployeeupdateBookingStatus(id, data)
         }
         catch (e) {
             throw new HttpException(e.message, HttpStatus.BAD_REQUEST)
         }
     }
+
+    @UseGuards(AuthGuardWithRoles)
+    @Roles(Role.Manager)
+    @Put('manager/update-booking-status/:id')
+    async managerUpdateBooking(@Param('id') id: string, @Body() data: UpdateBookingDto) {
+        try {
+            return await this.bookingServiceService.EmployeeupdateBookingStatus(id, data)
+        }
+        catch (e) {
+            throw new HttpException(e.message, HttpStatus.BAD_REQUEST)
+        }
+    }
+
 
     @UseGuards(AuthGuardWithRoles)
     @Roles(Role.User)
     @Put('/make-payment/:id')
-    async makePayment(@Param('id') id: string, data: MakeBookingPayment) {
+    async makePayment(@Param('id') id: string, @Body() data: MakeBookingPayment) {
         try {
             return await this.bookingServiceService.makePayment(id, data)
 
@@ -110,7 +134,23 @@ export class BookingcontrollerController {
         }
     }
 
+    @UseGuards(AuthGuardWithRoles)
+    @Roles(Role.User)
+    @Put('review/:bookingId')
+    async giveReview(@Param('bookingId') bookingId: string, @Body() data: CreateReviewDto) {
 
+        const review = await this.bookingServiceService.addReview(bookingId, data)
+        return review
+
+    }
+
+    @UseGuards(AuthGuardWithRoles)
+    @Roles(Role.Manager)
+    @Put('resolve-flag/:employeeId')
+    async resolveFlag(@Param('employeeId') employeeId: string, flagIndex: number, @Body() dto: ResolveFlagDto) {
+        const flagResolved = await this.bookingServiceService.resolveFlag(employeeId, flagIndex, dto)
+        return flagResolved
+    }
 
 
     @Delete(':id')
