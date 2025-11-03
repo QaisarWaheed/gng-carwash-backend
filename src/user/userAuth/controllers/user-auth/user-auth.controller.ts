@@ -31,6 +31,7 @@ export class UserAuthController {
 
   @Post('login')
   async signInUser(@Body() data: LoginDto) {
+    console.log(data)
     return await this.userAuthService.signIn(data);
   }
 

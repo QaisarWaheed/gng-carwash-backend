@@ -5,6 +5,7 @@ import {
   HttpStatus,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Roles, UserAuth } from '../entities/userAuth.entity';
@@ -77,7 +78,7 @@ export class UserAuthService {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new NotFoundException('Invalid passowrd');
+      throw new NotFoundException('Invalid Credentials');
     }
     return user;
   }
@@ -86,7 +87,7 @@ export class UserAuthService {
     const user = await this.validateUser(data.identifier, data.password);
 
     if (!user) {
-      throw new NotFoundException('Invalid Credentials');
+      throw new UnauthorizedException('Invalid Credentials');
     }
 
     const payload = {

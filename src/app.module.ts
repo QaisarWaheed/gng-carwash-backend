@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AdminModule } from './features/Admin/admin.module';
 import { BookingModule } from './features/Booking/booking.module';
+import { VehicleModule } from './user/vehicle/vehicle/vehicle.module';
 
 @Module({
   imports: [
@@ -26,10 +27,10 @@ import { BookingModule } from './features/Booking/booking.module';
         };
       },
     }),
-    UserAuthModule,AdminModule,BookingModule,
+    UserAuthModule, VehicleModule, AdminModule, BookingModule,
     MongooseModule.forRoot('mongodb://localhost/gng-carwash'),
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
