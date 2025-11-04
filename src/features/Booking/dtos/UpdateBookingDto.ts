@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { IsEnum, IsOptional } from 'class-validator';
-import { CreateBookingDto } from './CreateBookingDto';
+import { CreateBookingDto } from './createBookingDto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateBookingDto extends PartialType(CreateBookingDto) {

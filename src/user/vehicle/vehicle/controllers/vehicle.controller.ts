@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { VehicleService } from '../services/vehicle.service';
-import { AuthGuardWithRoles } from 'src/guards/AuthGuard';
-import { Roles } from 'src/decorators/Roles.decorator';
+import { AuthGuardWithRoles } from 'src/guards/authGuart';
+import { Roles } from 'src/decorators/roles.decorator';
 import { Role } from 'src/types/enum.class';
 import { CreateVehicleDto } from '../dtos/createVehicleDto';
 

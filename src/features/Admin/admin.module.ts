@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { ServiceModule } from './ServicesModule/service.module';
 
@@ -5,4 +6,4 @@ import { ServiceModule } from './ServicesModule/service.module';
   controllers: [],
   imports: [ServiceModule]
 })
-export class AdminModule {}
+export class AdminModule { }

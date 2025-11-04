@@ -2,9 +2,9 @@ import { Module } from '@nestjs/common';
 import { BookingController } from './controllers/bookingcontroller/bookingcontroller.controller';
 import { BookingServiceService } from './booking-service/booking-service.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Booking, bookingSchema } from './entities/Booking.entity';
+import { Booking, bookingSchema } from './entities/booking.entity';
 import userAuthSchema from 'src/user/userAuth/entities/userAuth.entity';
-import employeeSchema from 'src/user/employee/entities/Employeet.entity';
+import employeeSchema from 'src/user/employee/entities/employee.entity';
 import { UserAuthService } from 'src/user/userAuth/services/userAuth.service';
 
 @Module({

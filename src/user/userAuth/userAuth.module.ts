@@ -8,7 +8,7 @@ import { jwtConstants } from 'jwtConstants';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/strategies/jwtStrategy/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
-import employeeSchema, { Employee } from '../employee/entities/Employeet.entity';
+import employeeSchema, { Employee } from '../employee/entities/employee.entity';
 
 @Module({
   imports: [

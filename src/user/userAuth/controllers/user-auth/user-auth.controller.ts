@@ -10,14 +10,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserAuthService } from '../../services/userAuth.service';
-import { UserAuthDto } from '../../dtos/UserAuth.dto';
+import { UserAuthDto } from '../../dtos/userAuth.dto';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { LoginDto } from '../../dtos/Login.dto';
-import { forgotPasswordDto } from '../../dtos/ForgotPassword.dto';
-import { UpdateWorkerDto } from '../../dtos/UpdateWorker.dto';
+import { LoginDto } from '../../dtos/login.dto';
+import { forgotPasswordDto } from '../../dtos/forgotPassword.dto';
+import { UpdateWorkerDto } from '../../dtos/updateWorker.dto';
 import { Role } from 'src/types/enum.class';
-import { Roles } from 'src/decorators/Roles.decorator';
-import { AuthGuardWithRoles } from 'src/guards/AuthGuard';
+import { Roles } from 'src/decorators/roles.decorator';
+import { AuthGuardWithRoles } from 'src/guards/authGuart';
 @ApiTags('User-Auth')
 @Controller('user-auth')
 @ApiBearerAuth()

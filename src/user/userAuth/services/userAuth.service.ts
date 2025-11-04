@@ -10,14 +10,14 @@ import {
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Roles, UserAuth } from '../entities/userAuth.entity';
 import { Connection, Model, Types } from 'mongoose';
-import { UserAuthDto } from '../dtos/UserAuth.dto';
+import { UserAuthDto } from '../dtos/userAuth.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDto } from '../dtos/Login.dto';
-import { UpdateWorkerDto } from '../dtos/UpdateWorker.dto';
+import { LoginDto } from '../dtos/login.dto';
+import { UpdateWorkerDto } from '../dtos/updateWorker.dto';
 import { AdminLoginDto } from '../dtos/adminLogin.dto';
 import { ConfigService } from '@nestjs/config';
-import { Employee } from 'src/user/employee/entities/Employeet.entity';
+import { Employee } from 'src/user/employee/entities/employee.entity';
 
 @Injectable()
 export class UserAuthService {

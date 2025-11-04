@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Booking } from '../entities/Booking.entity';
-import { CreateBookingDto } from '../dtos/CreateBookingDto';
-import { MakeBookingPayment } from '../dtos/MakePayment.dto';
-import { UpdateBookingDto } from '../dtos/UpdateBookingDto';
+import { Booking } from '../entities/booking.entity';
+import { CreateBookingDto } from '../dtos/createBookingDto';
+import { MakeBookingPayment } from '../dtos/makePayment.dto';
+import { UpdateBookingDto } from '../dtos/updateBookingDto';
 import { UserAuthService } from 'src/user/userAuth/services/userAuth.service';
-import { CreateReviewDto } from '../dtos/ReviewbookingDto';
-import { Employee } from 'src/user/employee/entities/Employeet.entity';
+import { CreateReviewDto } from '../dtos/reviewbookingDto';
+import { Employee } from 'src/user/employee/entities/employee.entity';
 import { CreateFlagDto } from 'src/user/employee/dto/createFlagDto';
-import { ResolveFlagDto } from '../dtos/ResolveFlagDto';
+import { ResolveFlagDto } from '../dtos/resolveFlagDto';
 
 @Injectable()
 export class BookingServiceService {
