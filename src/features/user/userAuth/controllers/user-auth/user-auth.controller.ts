@@ -18,6 +18,8 @@ import { UpdateWorkerDto } from '../../dtos/updateWorker.dto';
 import { Role } from 'src/types/enum.class';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
+import express from 'express';
+
 @ApiTags('User-Auth')
 @Controller('user-auth')
 @ApiBearerAuth()
@@ -82,7 +84,8 @@ export class UserAuthController {
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
   @Post('create-manager')
-  async createManager(@Body() data: UserAuthDto) {
+  async createManager(@Body() data: UserAuthDto, req: express.Request) {
+    console.log('Request headers:', req.headers);
     const newEmployee = await this.userAuthService.createManager(data);
     return newEmployee;
   }
