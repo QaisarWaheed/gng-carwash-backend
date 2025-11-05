@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable prettier/prettier */
 import {
   BadRequestException,
   Get,
@@ -17,7 +20,8 @@ import { LoginDto } from '../dtos/login.dto';
 import { UpdateWorkerDto } from '../dtos/updateWorker.dto';
 import { AdminLoginDto } from '../dtos/adminLogin.dto';
 import { ConfigService } from '@nestjs/config';
-import { Employee } from 'src/user/employee/entities/employee.entity';
+import { Employee } from '../../employee/entities/employee.entity';
+
 
 @Injectable()
 export class UserAuthService {
@@ -44,17 +48,37 @@ export class UserAuthService {
 
 
   async signup(data: UserAuthDto): Promise<UserAuth> {
+
     const { email, phoneNumber } = data;
     const existingUser = await this.userAuthModel.findOne({
       $or: [{ email }, { phoneNumber }],
     });
+    console.log(existingUser);
+    console.log(email, phoneNumber);
+
+
+
+
+
+
 
     if (existingUser) {
-      if (existingUser.email === email)
+      const emailTaken = existingUser.email === email;
+      const phoneTaken = existingUser.phoneNumber === phoneNumber;
+
+      if (emailTaken && phoneTaken) {
+        throw new BadRequestException('Email & Phone number are already taken');
+      }
+
+      if (emailTaken) {
         throw new BadRequestException('Email is already taken');
-      if (existingUser.phoneNumber === phoneNumber)
+      }
+
+      if (phoneTaken) {
         throw new BadRequestException('Phone number is already taken');
+      }
     }
+
 
     const saltOrRounds = 12;
     const hashedPassword = await bcrypt.hash(data.password, saltOrRounds);
@@ -63,6 +87,7 @@ export class UserAuthService {
     const newUser = this.userAuthModel.create(data);
 
     return newUser;
+
   }
 
   async validateUser(identifier: string, password: string): Promise<any> {

@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+
 import { MongooseModule } from '@nestjs/mongoose';
 import userAuthSchema, { UserAuth } from './entities/userAuth.entity';
 import { UserAuthService } from './services/userAuth.service';
@@ -9,6 +10,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from 'src/strategies/jwtStrategy/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import employeeSchema, { Employee } from '../employee/entities/employee.entity';
+import { Module } from '@nestjs/common';
 
 @Module({
   imports: [

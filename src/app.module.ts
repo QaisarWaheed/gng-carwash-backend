@@ -1,12 +1,15 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserAuthModule } from './user/userAuth/userAuth.module';
+
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AdminModule } from './features/admin/admin.module';
 import { BookingModule } from './features/booking/booking.module';
-import { VehicleModule } from './user/vehicle/vehicle/vehicle.module';
+import { UserAuthModule } from './features/user/userAuth/userAuth.module';
+import { VehicleModule } from './features/user/vehicle/vehicle/vehicle.module';
+
 
 @Module({
   imports: [

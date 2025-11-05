@@ -26,6 +26,7 @@ export class UserAuthController {
 
   @Post('signup')
   async signupUser(@Body() data: UserAuthDto) {
+    console.log(data)
     return this.userAuthService.signup(data);
   }
 

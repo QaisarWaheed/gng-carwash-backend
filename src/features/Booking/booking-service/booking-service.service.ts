@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -5,11 +6,13 @@ import { Booking } from '../entities/booking.entity';
 import { CreateBookingDto } from '../dtos/createBookingDto';
 import { MakeBookingPayment } from '../dtos/makePayment.dto';
 import { UpdateBookingDto } from '../dtos/updateBookingDto';
-import { UserAuthService } from 'src/user/userAuth/services/userAuth.service';
+
 import { CreateReviewDto } from '../dtos/reviewbookingDto';
-import { Employee } from 'src/user/employee/entities/employee.entity';
-import { CreateFlagDto } from 'src/user/employee/dto/createFlagDto';
+
 import { ResolveFlagDto } from '../dtos/resolveFlagDto';
+import { CreateFlagDto } from 'src/features/user/employee/dto/createFlagDto';
+import { Employee } from 'src/features/user/employee/entities/employee.entity';
+import { UserAuthService } from 'src/features/user/userAuth/services/userAuth.service';
 
 @Injectable()
 export class BookingServiceService {
