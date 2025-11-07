@@ -79,7 +79,7 @@ export class UserAuthController {
 
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
-  @Get('get-manager')
+  @Get('get-managers')
   async findAllManagers(@Param('role') role: Role) {
     role = Role.Manager;
     return await this.userAuthService.getAll(role);
@@ -88,8 +88,8 @@ export class UserAuthController {
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
   @Roles(Role.Manager)
-  @Get('get-employee')
-  async findAllEmployees(@Param('role') role: Role) {
+  @Get('get-employees')
+  async findAllEmployees(role: Role) {
     role = Role.Employee;
     return await this.userAuthService.getAll(role);
   }
@@ -135,7 +135,7 @@ export class UserAuthController {
 
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
-  @Delete('delete-worker/:id')
+  @Delete('delete-role/:id')
   async deleteWorker(@Param('id') id: string) {
     return await this.userAuthService.deleteWorker(id);
   }

@@ -1,34 +1,33 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { ObjectId } from "mongoose";
+@Schema({ timestamps: true })
+export class AdminService {
 
-@Schema({timestamps:true})
-export class AdminService{
-
-declare _id:mongoose.Types.ObjectId
-
-
-@Prop()
-name:string
+    declare _id: mongoose.Types.ObjectId
 
 
-@Prop()
-description:string
+    @Prop()
+    name: string
 
 
-@Prop()
-price:number
+    @Prop()
+    description: string
 
 
-@Prop()
-estimatedTime:number
-
-@Prop()
-isActive:boolean
+    @Prop()
+    price: number
 
 
-declare createdAt:Date
+    @Prop()
+    estimatedTime: number
 
-declare updatedAt:Date
+    @Prop()
+    isActive: boolean
+
+
+    declare createdAt: Date
+
+    declare updatedAt: Date
 
 }
 
