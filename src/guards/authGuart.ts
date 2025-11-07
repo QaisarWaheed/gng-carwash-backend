@@ -1,9 +1,8 @@
-// src/guards/AuthGuardWithRoles.ts
 import {
   Injectable,
   ExecutionContext,
   ForbiddenException,
-  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
@@ -12,30 +11,30 @@ import { ROLES_KEY } from 'src/decorators/roles.decorator';
 
 @Injectable()
 export class AuthGuardWithRoles extends AuthGuard('jwt') {
-  constructor(private reflector: Reflector) {
+  constructor(private readonly reflector: Reflector) {
     super();
   }
 
-  handleRequest(err, user, info, context: ExecutionContext) {
-    const request = context.switchToHttp().getRequest();
+  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+    if (err || !user) {
+      throw new UnauthorizedException('Invalid or missing token');
+    }
 
     const requiredRoles = this.reflector.getAllAndOverride<Role[]>(ROLES_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (!requiredRoles) return user;
 
-    try {
-      const hasRole = requiredRoles
-        .map((r) => r.toLowerCase())
-        .includes(user.role.toLowerCase());
-      if (!hasRole) {
-        throw new ForbiddenException(
-          'You do not have permission for this route',
-        );
-      }
-    } catch (e) {
-      throw new BadRequestException('Token is not valid');
+    if (!requiredRoles || requiredRoles.length === 0) {
+      return user;
+    }
+
+    const hasRole = requiredRoles
+      .map((r) => r.toLowerCase())
+      .includes(user.role?.toLowerCase());
+
+    if (!hasRole) {
+      throw new ForbiddenException('You do not have permission for this route');
     }
 
     return user;

@@ -3,9 +3,6 @@
 /* eslint-disable prettier/prettier */
 import {
   BadRequestException,
-  Get,
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -18,7 +15,6 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from '../dtos/login.dto';
 import { UpdateWorkerDto } from '../dtos/updateWorker.dto';
-import { AdminLoginDto } from '../dtos/adminLogin.dto';
 import { ConfigService } from '@nestjs/config';
 import { Employee } from '../../employee/entities/employee.entity';
 
@@ -89,6 +85,9 @@ export class UserAuthService {
     return newUser;
 
   }
+
+
+
 
   async validateUser(identifier: string, password: string): Promise<any> {
     const query = identifier.includes('@')

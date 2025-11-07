@@ -7,7 +7,9 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
+  Headers
 } from '@nestjs/common';
 import { UserAuthService } from '../../services/userAuth.service';
 import { UserAuthDto } from '../../dtos/userAuth.dto';
@@ -25,6 +27,15 @@ import express from 'express';
 @ApiBearerAuth()
 export class UserAuthController {
   constructor(private readonly userAuthService: UserAuthService) { }
+
+
+  @Post('check-token')
+  checkToken(@Headers('authorization') authHeader: string) {
+    console.log('Token from frontend:', authHeader); // check token in backend logs
+    return { receivedToken: authHeader };
+  }
+
+
 
   @Post('signup')
   async signupUser(@Body() data: UserAuthDto) {
@@ -76,7 +87,13 @@ export class UserAuthController {
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
   @Post('create-employee')
-  async createEmployee(@Body() data: UserAuthDto) {
+  async createEmployee(@Body() data: UserAuthDto, @Req() req: express.Request) {
+
+    console.log('Request headers:', req.headers);
+    const authHeader = req.headers['authorization'];
+    const token = typeof authHeader === 'string' ? authHeader.split(' ')[1] : undefined;
+    console.log('🧾 Extracted Token:', token);
+
     const newEmployee = await this.userAuthService.createEmployee(data);
     return newEmployee;
   }
