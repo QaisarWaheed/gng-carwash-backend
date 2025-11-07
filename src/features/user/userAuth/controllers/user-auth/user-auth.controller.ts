@@ -79,20 +79,40 @@ export class UserAuthController {
 
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
-  @Get('getAll/:role')
-  async findAllWorkers(@Param('role') role: Role) {
+  @Get('get-manager')
+  async findAllManagers(@Param('role') role: Role) {
+    role = Role.Manager;
     return await this.userAuthService.getAll(role);
   }
 
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
-  @Post('create-employee')
-  async createEmployee(@Body() data: UserAuthDto, @Req() req: express.Request) {
+  @Roles(Role.Manager)
+  @Get('get-employee')
+  async findAllEmployees(@Param('role') role: Role) {
+    role = Role.Employee;
+    return await this.userAuthService.getAll(role);
+  }
 
-    console.log('Request headers:', req.headers);
-    const authHeader = req.headers['authorization'];
-    const token = typeof authHeader === 'string' ? authHeader.split(' ')[1] : undefined;
-    console.log('🧾 Extracted Token:', token);
+  @UseGuards(AuthGuardWithRoles)
+  @Roles(Role.Admin)
+  @Get('get-users')
+  async findAllCustomers() {
+    const role = Role.User;
+    return await this.userAuthService.getAll(role);
+  }
+
+
+
+
+
+
+
+  @UseGuards(AuthGuardWithRoles)
+  @Roles(Role.Admin)
+  @Post('create-employee')
+  async createEmployee(@Body() data: UserAuthDto) {
+
 
     const newEmployee = await this.userAuthService.createEmployee(data);
     return newEmployee;
@@ -101,8 +121,7 @@ export class UserAuthController {
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
   @Post('create-manager')
-  async createManager(@Body() data: UserAuthDto, req: express.Request) {
-    console.log('Request headers:', req.headers);
+  async createManager(@Body() data: UserAuthDto) {
     const newEmployee = await this.userAuthService.createManager(data);
     return newEmployee;
   }
