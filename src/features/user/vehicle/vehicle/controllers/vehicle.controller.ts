@@ -6,7 +6,7 @@ import { Role } from 'src/types/enum.class';
 import { CreateVehicleDto } from '../dtos/createVehicleDto';
 
 
-@Controller('vehicle')
+@Controller('vehicles')
 @UseGuards(AuthGuardWithRoles)
 export class VehicleController {
     constructor(private readonly vehicleService: VehicleService) { }
