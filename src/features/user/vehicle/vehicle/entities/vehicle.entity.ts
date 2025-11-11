@@ -1,6 +1,11 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { Types } from "mongoose";
-import { ref } from "process";
+
+
+export type VehicleType = 'car' | 'bike' | 'jetski' | 'buggy' | 'caravan' | 'mpv' | 'other';
+
+export type VehicleSubType = 'sedan' | 'suv' | 'coupe' | 'hatchback' | 'truck';
+
 
 @Schema({ timestamps: true })
 export class Vehicle {
@@ -16,6 +21,17 @@ export class Vehicle {
     @Prop()
     model: string
 
+
+    @Prop()
+    type: VehicleType;
+
+    @Prop()
+    subType?: VehicleSubType;
+
+    @Prop()
+    make: string;
+
+
     @Prop()
     year: number
 
@@ -23,7 +39,20 @@ export class Vehicle {
     plateNumber: string
 
     @Prop()
+    plateCode: string;
+
+
+    @Prop()
     color: string
+
+
+
+    @Prop()
+    city: string;
+
+    @Prop()
+    photo?: string;
+
 
 }
 

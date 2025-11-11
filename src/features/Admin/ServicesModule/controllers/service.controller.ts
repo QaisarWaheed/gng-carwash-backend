@@ -15,7 +15,7 @@ export class ServiceController {
     constructor(private readonly adminService: ServiceService) { }
 
 
-    @Get()
+    @Get('get-all-services')
     async getAllServices() {
         try {
             return await this.adminService.getAllServices()

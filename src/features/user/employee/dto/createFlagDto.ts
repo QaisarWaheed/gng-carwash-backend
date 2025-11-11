@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { IsMongoId, IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
