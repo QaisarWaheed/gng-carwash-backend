@@ -47,10 +47,10 @@ export class Booking {
 
   @Prop({
     type: String,
-    enum: ['Pending', 'Assigned', 'InProgress', 'Completed', 'Cancelled'],
-    default: 'Pending',
+    enum: ['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'],
+    default: 'pending',
   })
-  status: 'Pending' | 'Assigned' | 'InProgress' | 'Completed' | 'Cancelled';
+  status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 
   @Prop({ type: Number, required: true })
   totalPrice: number;
@@ -84,6 +84,32 @@ export class Booking {
   @Prop()
   afterImage: string
 
+  @Prop({ type: String })
+  cancellationReason?: string;
+
+  @Prop({ type: Number, min: 1, max: 5 })
+  rating?: number;
+
+  @Prop({ type: String })
+  review?: string;
+
+  @Prop({ type: Number })
+  subtotal?: number;
+
+  @Prop({ type: Number })
+  serviceCharge?: number;
+
+  @Prop({ type: String, enum: ['sedan', 'suv', 'coupe', 'hatchback', 'truck'] })
+  vehicleSubType?: 'sedan' | 'suv' | 'coupe' | 'hatchback' | 'truck';
+
+  @Prop({ type: [Types.ObjectId], ref: 'Service' })
+  services?: Types.ObjectId[];
+
+  @Prop({ type: Types.ObjectId, ref: 'Address' })
+  addressId?: Types.ObjectId;
+
+  @Prop({ type: String })
+  additionalNotes?: string;
 
 }
 

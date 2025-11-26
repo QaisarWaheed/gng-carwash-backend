@@ -4,7 +4,7 @@ import { ServiceService } from '../services/services.service';
 import { CreateServiceDto } from '../dtos/CreateServiceDto';
 import { UpdateServiceDto } from '../dtos/UpdateServiceDto';
 import { Role } from 'src/types/enum.class';
-import { Roles } from 'src/decorators/roles.decorator';
+import { Roles } from 'src/decorators/Roles.decorator';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
 import { ApiBearerAuth } from '@nestjs/swagger';
 

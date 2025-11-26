@@ -18,39 +18,83 @@ export class VehicleService {
 
             const vehicle = await this.vehicleModel.create({
                 ...dto,
-                userId: new Types.ObjectId(dto.userId),
+                customerId: new Types.ObjectId(dto.customerId),
             });
 
-            return { message: 'Vehicle created successfully', vehicle };
+            const vehicleObj = vehicle.toObject();
+            return { message: 'Vehicle created successfully', vehicle: { ...vehicleObj, id: vehicleObj._id.toString() } };
         } catch (error) {
             throw new BadRequestException(error.message);
         }
     }
     async getAllVehicles() {
-        const vehicles = await this.vehicleModel.find().populate('userId', 'name email');
-        return vehicles;
+        const vehicles = await this.vehicleModel.find().populate('customerId', 'fullName email');
+        return vehicles.map(v => {
+            const obj = v.toObject();
+            return { ...obj, id: obj._id.toString() };
+        });
     }
 
     async getVehiclesByUser(userId: string) {
-        const vehicles = await this.vehicleModel.find({ userId: new Types.ObjectId(userId) });
-        return vehicles;
+        const vehicles = await this.vehicleModel.find({ customerId: new Types.ObjectId(userId) });
+        return vehicles.map(v => {
+            const obj = v.toObject();
+            return { ...obj, id: obj._id.toString() };
+        });
     }
 
     async getVehicleById(id: string) {
-        const vehicle = await this.vehicleModel.findById(id).populate('userId', 'name email');
+        const vehicle = await this.vehicleModel.findById(id).populate('customerId', 'fullName email');
         if (!vehicle) throw new NotFoundException('Vehicle not found');
-        return vehicle;
+        const obj = vehicle.toObject();
+        return { ...obj, id: obj._id.toString() };
     }
 
     async updateVehicle(id: string, dto: Partial<CreateVehicleDto>) {
         const updated = await this.vehicleModel.findByIdAndUpdate(id, dto, { new: true });
         if (!updated) throw new NotFoundException('Vehicle not found');
-        return { message: 'Vehicle updated successfully', updated };
+        const obj = updated.toObject();
+        return { message: 'Vehicle updated successfully', updated: { ...obj, id: obj._id.toString() } };
     }
 
     async deleteVehicle(id: string) {
         const deleted = await this.vehicleModel.findByIdAndDelete(id);
         if (!deleted) throw new NotFoundException('Vehicle not found');
         return { message: 'Vehicle deleted successfully' };
+    }
+
+    async setDefaultVehicle(id: string) {
+        const vehicle = await this.vehicleModel.findById(id);
+        if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+        await this.vehicleModel.updateMany(
+            { customerId: vehicle.customerId },
+            { $set: { isDefault: false } }
+        );
+
+        const updated = await this.vehicleModel.findByIdAndUpdate(
+            id,
+            { $set: { isDefault: true } },
+            { new: true }
+        );
+
+        if (!updated) throw new NotFoundException('Vehicle not found');
+        const obj = updated.toObject();
+        return { message: 'Default vehicle set successfully', vehicle: { ...obj, id: obj._id.toString() } };
+    }
+
+    async uploadVehiclePhoto(id: string, photoUri: string) {
+        const vehicle = await this.vehicleModel.findById(id);
+        if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+        const updated = await this.vehicleModel.findByIdAndUpdate(
+            id,
+            { $set: { photo: photoUri } },
+            { new: true }
+        );
+
+        if (!updated) throw new NotFoundException('Vehicle not found');
+        const obj = updated.toObject();
+        return { photoUrl: photoUri, vehicle: { ...obj, id: obj._id.toString() } };
     }
 }

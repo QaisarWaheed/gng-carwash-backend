@@ -1,42 +1,57 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Types } from "mongoose";
+import { IsString, IsNumber, IsOptional, IsBoolean } from "class-validator";
 import type { VehicleSubType, VehicleType } from "../entities/vehicle.entity";
 
 export class CreateVehicleDto {
-    @ApiProperty({ type: Types.ObjectId })
-    customerId: Types.ObjectId
+    @ApiProperty()
+    @IsString()
+    customerId: string
 
     @ApiProperty()
-    brand: string
-
-    @ApiProperty()
+    @IsString()
     model: string
 
     @ApiProperty()
+    @IsString()
     type: VehicleType;
 
-    @ApiProperty()
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsString()
     subType?: VehicleSubType;
 
     @ApiProperty()
+    @IsString()
     make: string;
 
     @ApiProperty()
+    @IsNumber()
     year: number
 
     @ApiProperty()
+    @IsString()
     plateNumber: string
 
     @ApiProperty()
+    @IsString()
     plateCode: string;
 
     @ApiProperty()
+    @IsString()
     color: string
 
     @ApiProperty()
+    @IsString()
     city: string;
 
-    @ApiProperty()
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsString()
     photo?: string;
+
+    @ApiProperty({ required: false })
+    @IsOptional()
+    @IsBoolean()
+    isDefault?: boolean;
 
 }

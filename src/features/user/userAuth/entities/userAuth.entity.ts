@@ -35,6 +35,15 @@ export class UserAuth {
   @Prop({ type: Date, required: false })
   otpExpiresAt?: Date;
 
+  @Prop({ type: String, required: false })
+  googleId?: string;
+
+  @Prop({ type: String, required: false })
+  avatar?: string;
+
+  @Prop({ type: Boolean, default: false })
+  isVerified?: boolean;
+
   declare createAt: Date;
   declare updatedAt: Date;
 }

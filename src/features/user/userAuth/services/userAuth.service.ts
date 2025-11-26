@@ -49,8 +49,6 @@ export class UserAuthService {
     const existingUser = await this.userAuthModel.findOne({
       $or: [{ email }, { phoneNumber }],
     });
-    console.log(existingUser);
-    console.log(email, phoneNumber);
 
 
 
@@ -93,17 +91,18 @@ export class UserAuthService {
     const query = identifier.includes('@')
       ? { email: identifier }
       : { phoneNumber: identifier };
+
     const user = await this.userAuthModel.findOne(query);
 
     if (!user) {
       throw new NotFoundException('Invalid Credentials');
     }
-
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new NotFoundException('Invalid Credentials');
     }
+
     return user;
   }
 
@@ -123,7 +122,6 @@ export class UserAuthService {
     const token = await this.jwtService.signAsync(payload, {
       secret: 'a-string-secret-at-least-256-bits-long',
     });
-    console.log(token);
     return {
       success: true,
       message: 'Login successful',
@@ -155,8 +153,6 @@ export class UserAuthService {
     user.otp = otp;
     user.otpExpiresAt = expiry;
     await user.save();
-
-    console.log(`OTP ${otp} sent to ${identifier}`);
 
     return { success: true, message: 'OTP sent successfully' };
   }
@@ -313,5 +309,139 @@ export class UserAuthService {
     }
 
     return { message: 'User deleted Succesfuly' };
+  }
+
+  async getUserProfile(userId: string): Promise<UserAuth> {
+    const user = await this.userAuthModel.findById(userId).select('-password -otp -otpExpiresAt');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
+  }
+
+  async updateUserProfile(userId: string, updateData: Partial<UserAuthDto>): Promise<UserAuth> {
+
+    const { password, role, ...safeUpdateData } = updateData as any;
+
+    const updatedUser = await this.userAuthModel
+      .findByIdAndUpdate(userId, safeUpdateData, { new: true })
+      .select('-password -otp -otpExpiresAt');
+
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    return updatedUser;
+  }
+
+  async resetPassword(userId: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    const user = await this.userAuthModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userAuthModel.updateOne({ _id: userId }, { password: hashedPassword });
+
+    return { success: true, message: 'Password reset successfully' };
+  }
+
+  async refreshToken(userId: string, email: string, role: Roles): Promise<{ token: string }> {
+    const payload = {
+      sub: userId,
+      email: email,
+      role: role,
+    };
+
+    const token = await this.jwtService.signAsync(payload, {
+      secret: 'a-string-secret-at-least-256-bits-long',
+    });
+
+    return { token };
+  }
+
+  async googleLogin(googleToken: string, userInfo: any) {
+    const { email, name, picture, sub } = userInfo;
+
+    let user = await this.userAuthModel.findOne({ email });
+
+    if (!user) {
+      throw new NotFoundException('No account found with this email. Please sign up first.');
+    }
+
+    if (!user.googleId) {
+      user.googleId = sub;
+      user.avatar = picture;
+      await user.save();
+    }
+
+    const payload = {
+      sub: user._id,
+      email: user.email,
+      role: user.role,
+    };
+
+    const token = await this.jwtService.signAsync(payload, {
+      secret: 'a-string-secret-at-least-256-bits-long',
+    });
+
+    return {
+      success: true,
+      message: 'Google login successful',
+      token,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+      },
+    };
+  }
+
+  async googleSignup(googleToken: string, userInfo: any) {
+    const { email, name, picture, sub } = userInfo;
+
+    const existingUser = await this.userAuthModel.findOne({ email });
+
+    if (existingUser) {
+      throw new BadRequestException('An account with this email already exists. Please login instead.');
+    }
+
+    const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(randomPassword, 12);
+
+    const newUser = await this.userAuthModel.create({
+      fullName: name,
+      email: email,
+      password: hashedPassword,
+      role: 'User',
+      googleId: sub,
+      avatar: picture,
+      isVerified: true,
+    });
+
+    const payload = {
+      sub: newUser._id,
+      email: newUser.email,
+      role: newUser.role,
+    };
+
+    const token = await this.jwtService.signAsync(payload, {
+      secret: 'a-string-secret-at-least-256-bits-long',
+    });
+
+    return {
+      success: true,
+      message: 'Google signup successful',
+      token,
+      user: {
+        id: newUser._id,
+        fullName: newUser.fullName,
+        email: newUser.email,
+        phoneNumber: newUser.phoneNumber,
+        role: newUser.role,
+      },
+    };
   }
 }

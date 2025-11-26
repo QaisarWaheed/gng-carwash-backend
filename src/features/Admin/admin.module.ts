@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { ServiceModule } from './servicesModule/service.module';
+import { ServiceModule } from './ServicesModule/service.module';
 
 @Module({
   controllers: [],

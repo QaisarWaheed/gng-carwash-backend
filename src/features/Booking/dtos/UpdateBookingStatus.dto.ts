@@ -13,9 +13,9 @@ export class UpdateBookingStatus {
 
     @ApiProperty({
         type: String,
-        enum: ['Pending', 'Assigned', 'InProgress', 'Completed', 'Cancelled'],
-        default: 'Pending',
+        enum: ['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'],
+        default: 'pending',
     })
-    status: 'Pending' | 'Assigned' | 'InProgress' | 'Completed' | 'Cancelled';
+    status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 
 }

@@ -17,8 +17,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { LoginDto } from '../../dtos/login.dto';
 import { forgotPasswordDto } from '../../dtos/forgotPassword.dto';
 import { UpdateWorkerDto } from '../../dtos/updateWorker.dto';
+import { UpdateProfileDto } from '../../dtos/updateProfile.dto';
+import { ResetPasswordDto } from '../../dtos/resetPassword.dto';
 import { Role } from 'src/types/enum.class';
-import { Roles } from 'src/decorators/roles.decorator';
+import { Roles } from 'src/decorators/Roles.decorator';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
 import express from 'express';
 
@@ -31,7 +33,6 @@ export class UserAuthController {
 
   @Post('check-token')
   checkToken(@Headers('authorization') authHeader: string) {
-    console.log('Token from frontend:', authHeader); // check token in backend logs
     return { receivedToken: authHeader };
   }
 
@@ -39,19 +40,26 @@ export class UserAuthController {
 
   @Post('signup')
   async signupUser(@Body() data: UserAuthDto) {
-    console.log(data)
     return this.userAuthService.signup(data);
   }
 
   @Post('login')
   async signInUser(@Body() data: LoginDto) {
-    console.log(data)
     return await this.userAuthService.signIn(data);
+  }
+
+  @Post('login/google')
+  async googleLogin(@Body() data: any) {
+    return await this.userAuthService.googleLogin(data.googleToken, data.userInfo);
+  }
+
+  @Post('signup/google')
+  async googleSignup(@Body() data: any) {
+    return await this.userAuthService.googleSignup(data.googleToken, data.userInfo);
   }
 
   @Post('forgot-password')
   async forgotPassword(@Body() data: forgotPasswordDto) {
-    console.log('Received identifier:', data.identifier);
     return await this.userAuthService.forgotPassword(data.identifier);
   }
 
@@ -68,6 +76,43 @@ export class UserAuthController {
       body.identifier,
       body.newPassword,
     );
+  }
+
+  @Post('logout')
+  async logout() {
+
+    return {
+      success: true,
+      message: 'Logged out successfully',
+    };
+  }
+
+  @UseGuards(AuthGuardWithRoles)
+  @Get('me')
+  async getCurrentUser(@Req() req: any) {
+    const userId = req.user.sub;
+    return this.userAuthService.getUserProfile(userId);
+  }
+
+  @UseGuards(AuthGuardWithRoles)
+  @Patch('update-profile')
+  async updateProfile(@Req() req: any, @Body() updateData: UpdateProfileDto) {
+    const userId = req.user.sub;
+    return this.userAuthService.updateUserProfile(userId, updateData);
+  }
+
+  @UseGuards(AuthGuardWithRoles)
+  @Post('reset-password')
+  async resetPassword(@Req() req: any, @Body() body: ResetPasswordDto) {
+    const userId = req.user.sub;
+    return this.userAuthService.resetPassword(userId, body.newPassword);
+  }
+
+  @UseGuards(AuthGuardWithRoles)
+  @Post('refresh')
+  async refreshToken(@Req() req: any) {
+    const { sub, email, role } = req.user;
+    return this.userAuthService.refreshToken(sub, email, role);
   }
 
   //employee and manager

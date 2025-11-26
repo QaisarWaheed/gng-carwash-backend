@@ -7,7 +7,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { Role } from 'src/types/enum.class';
-import { ROLES_KEY } from 'src/decorators/roles.decorator';
+import { ROLES_KEY } from 'src/decorators/Roles.decorator';
 
 @Injectable()
 export class AuthGuardWithRoles extends AuthGuard('jwt') {

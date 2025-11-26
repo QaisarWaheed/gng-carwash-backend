@@ -2,14 +2,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { Booking } from '../entities/booking.entity';
-import { CreateBookingDto } from '../dtos/createBookingDto';
-import { MakeBookingPayment } from '../dtos/makePayment.dto';
-import { UpdateBookingDto } from '../dtos/updateBookingDto';
+import { Booking } from '../entities/Booking.entity';
+import { CreateBookingDto } from '../dtos/CreateBookingDto';
+import { MakeBookingPayment } from '../dtos/MakePayment.dto';
+import { UpdateBookingDto } from '../dtos/UpdateBookingDto';
 
-import { CreateReviewDto } from '../dtos/reviewbookingDto';
+import { CreateReviewDto } from '../dtos/ReviewbookingDto';
 
-import { ResolveFlagDto } from '../dtos/resolveFlagDto';
+import { ResolveFlagDto } from '../dtos/ResolveFlagDto';
 import { CreateFlagDto } from 'src/features/user/employee/dto/createFlagDto';
 import { Employee } from 'src/features/user/employee/entities/employee.entity';
 import { UserAuthService } from 'src/features/user/userAuth/services/userAuth.service';
@@ -65,7 +65,6 @@ export class BookingServiceService {
 
     async assignEmployee(bookingId: string, employeeId: string): Promise<Booking | null> {
         const employee = await this.employeeModel.findById(employeeId);
-        console.log("employeeId: " + employeeId, "bookingId: " + bookingId)
         if (!employee) {
             throw new NotFoundException("Employee not found");
         }
@@ -76,7 +75,7 @@ export class BookingServiceService {
         }
 
         booking.assignedEmployeeId = new Types.ObjectId(employeeId);
-        booking.status = "Assigned";
+        booking.status = "confirmed";
         await booking.save();
 
         await this.employeeModel.findByIdAndUpdate(
@@ -99,7 +98,7 @@ export class BookingServiceService {
             throw new NotFoundException('Booking not found');
         }
 
-        if (booking.status !== 'Completed') {
+        if (booking.status !== 'completed') {
             return { message: 'Booking is still in progress' };
         }
 
@@ -126,7 +125,7 @@ export class BookingServiceService {
         const booking = await this.bookingModel.findById(bookingId);
         if (!booking) throw new NotFoundException('Booking not found');
 
-        if (booking.status !== 'Completed')
+        if (booking.status !== 'completed')
             throw new BadRequestException('You can only review completed bookings');
 
         if (booking.isReviewed) {

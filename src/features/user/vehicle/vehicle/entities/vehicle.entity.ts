@@ -16,11 +16,7 @@ export class Vehicle {
     customerId: Types.ObjectId
 
     @Prop()
-    brand: string
-
-    @Prop()
     model: string
-
 
     @Prop()
     type: VehicleType;
@@ -52,6 +48,9 @@ export class Vehicle {
 
     @Prop()
     photo?: string;
+
+    @Prop({ default: false })
+    isDefault?: boolean;
 
 
 }

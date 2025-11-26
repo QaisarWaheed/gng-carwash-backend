@@ -1,19 +1,35 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class UpdateServiceDto{
-@ApiProperty()
-name:string
+export type VehicleType = 'Sedan' | 'SUV' | 'Bike' | 'Carvan' | 'Buggy' | 'Jetski' | 'MPV' | 'Others';
 
-@ApiProperty()
-description:string
+export interface VehicleTypePrice {
+    vehicleType: VehicleType;
+    price: number;
+}
 
-@ApiProperty()
-price:number
+export class UpdateServiceDto {
+    @ApiProperty()
+    name: string
 
-@ApiProperty()
-estimatedTime:number
+    @ApiProperty()
+    description: string
 
-@ApiProperty()
-isActive:boolean
+    @ApiProperty()
+    price: number
+
+    @ApiProperty()
+    estimatedTime: number
+
+    @ApiProperty()
+    isActive: boolean
+
+    @ApiProperty()
+    vehicleTypes: VehicleType[];
+
+    @ApiProperty()
+    vehiclePricing?: VehicleTypePrice[];
+
+    @ApiProperty()
+    image?: string;
 
 }

@@ -57,8 +57,8 @@ export class CreateBookingDto {
 
   @ApiProperty()
   @IsOptional()
-  @IsEnum(['Pending', 'Assigned', 'InProgress', 'Completed', 'Cancelled'])
-  status?: 'Pending' | 'Assigned' | 'InProgress' | 'Completed' | 'Cancelled';
+  @IsEnum(['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'])
+  status?: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 
   @ApiProperty()
   @IsNumber()

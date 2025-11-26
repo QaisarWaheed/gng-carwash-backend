@@ -2,15 +2,15 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { BookingServiceService } from '../../booking-service/booking-service.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CreateBookingDto } from '../../dtos/createBookingDto';
+import { CreateBookingDto } from '../../dtos/CreateBookingDto';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
-import { Roles } from 'src/decorators/roles.decorator';
+import { Roles } from 'src/decorators/Roles.decorator';
 import { Role } from 'src/types/enum.class';
-import { AssignEmployeeDto } from '../../dtos/assignEmployeeDto';
-import { MakeBookingPayment } from '../../dtos/makePayment.dto';
-import { UpdateBookingDto } from '../../dtos/updateBookingDto';
-import { CreateReviewDto } from '../../dtos/reviewbookingDto';
-import { ResolveFlagDto } from '../../dtos/resolveFlagDto';
+import { AssignEmployeeDto } from '../../dtos/AssignEmployeeDto';
+import { MakeBookingPayment } from '../../dtos/MakePayment.dto';
+import { UpdateBookingDto } from '../../dtos/UpdateBookingDto';
+import { CreateReviewDto } from '../../dtos/ReviewbookingDto';
+import { ResolveFlagDto } from '../../dtos/ResolveFlagDto';
 import { Types } from 'mongoose';
 
 @ApiTags("Booking")
