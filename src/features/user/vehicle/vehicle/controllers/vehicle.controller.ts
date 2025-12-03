@@ -18,6 +18,7 @@ export class VehicleController {
     }
 
     @Roles(Role.Admin)
+    @Roles(Role.User)
     @Get()
     async getAllVehicles() {
         return await this.vehicleService.getAllVehicles();

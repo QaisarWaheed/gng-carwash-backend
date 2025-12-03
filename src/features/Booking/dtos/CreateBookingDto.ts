@@ -11,17 +11,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-class LocationDto {
-  @IsNumber()
-  lat: number;
-
-  @IsNumber()
-  lng: number;
-
-  @IsString()
-  @IsNotEmpty()
-  address: string;
-}
+ 
 
 export class CreateBookingDto {
   @ApiProperty()
@@ -49,21 +39,21 @@ export class CreateBookingDto {
   @IsNotEmpty()
   timeSlot: string;
 
+
   @ApiProperty()
-  @ValidateNested()
-  @Type(() => LocationDto)
-  @IsNotEmpty()
-  location: LocationDto;
+ @IsNotEmpty()
+  @IsString()
+  addressId: string; 
 
   @ApiProperty()
   @IsOptional()
   @IsEnum(['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'])
   status?: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 
-  @ApiProperty()
-  @IsNumber()
-  @IsNotEmpty()
-  totalPrice: number;
+  // @ApiProperty()
+  // @IsNumber()
+  // @IsNotEmpty()
+  // totalPrice: number;
 
   @ApiProperty()
   @IsOptional()

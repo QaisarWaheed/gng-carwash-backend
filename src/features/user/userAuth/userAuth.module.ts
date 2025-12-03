@@ -11,6 +11,7 @@ import { JwtStrategy } from 'src/strategies/jwtStrategy/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import employeeSchema, { Employee } from '../employee/entities/employee.entity';
 import { Module } from '@nestjs/common';
+import { UserAddress, UserAddressSchema } from '../entities/userAddress.entity';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { Module } from '@nestjs/common';
       signOptions: { expiresIn: '3600s' },
     }),
     MongooseModule.forFeature([
-      { name: UserAuth.name, schema: userAuthSchema }, { name: Employee.name, schema: employeeSchema }
+      { name: UserAuth.name, schema: userAuthSchema }, { name: Employee.name, schema: employeeSchema }, {name:UserAddress.name, schema:UserAddressSchema}
     ]),
   ],
   controllers: [UserAuthController],

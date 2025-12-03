@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { ServiceService } from '../services/services.service';
 import { CreateServiceDto } from '../dtos/CreateServiceDto';

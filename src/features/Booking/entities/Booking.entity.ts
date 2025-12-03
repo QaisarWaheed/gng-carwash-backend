@@ -3,11 +3,10 @@ import mongoose, { Document, Types } from 'mongoose';
 
 export type BookingDocument = Booking & Document;
 
+
 @Schema({ timestamps: true })
 export class Booking {
-
-  declare _id: mongoose.Types.ObjectId
-
+  declare _id: mongoose.Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'UserAuth', required: true })
   customerId: Types.ObjectId;
@@ -30,20 +29,8 @@ export class Booking {
   @Prop({ type: String, required: true })
   timeSlot: string;
 
-  @Prop({
-    type: {
-      lat: { type: Number, required: true },
-      lng: { type: Number, required: true },
-      address: { type: String, required: true },
-    },
-    required: true,
-    _id: false
-  })
-  location: {
-    lat: number;
-    lng: number;
-    address: string;
-  };
+  @Prop({ type: Types.ObjectId, ref: 'UserAddress', required: true })
+  addressId: Types.ObjectId;
 
   @Prop({
     type: String,
@@ -62,13 +49,10 @@ export class Booking {
   })
   paymentStatus: 'Unpaid' | 'Paid' | 'Refunded';
 
-
   @Prop({
     isReviewed: { type: Boolean, default: false },
   })
   isReviewed: boolean;
-
-
 
   @Prop({
     type: String,
@@ -77,12 +61,11 @@ export class Booking {
   })
   paymentMethod: 'Card';
 
+  @Prop()
+  beforeImage: string;
 
   @Prop()
-  beforeImage: string
-
-  @Prop()
-  afterImage: string
+  afterImage: string;
 
   @Prop({ type: String })
   cancellationReason?: string;
@@ -105,12 +88,8 @@ export class Booking {
   @Prop({ type: [Types.ObjectId], ref: 'Service' })
   services?: Types.ObjectId[];
 
-  @Prop({ type: Types.ObjectId, ref: 'Address' })
-  addressId?: Types.ObjectId;
-
   @Prop({ type: String })
   additionalNotes?: string;
-
 }
 
 export const bookingSchema = SchemaFactory.createForClass(Booking);
