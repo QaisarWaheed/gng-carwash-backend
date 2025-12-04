@@ -23,6 +23,8 @@ import { Role } from 'src/types/enum.class';
 import { Roles } from 'src/decorators/Roles.decorator';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
 import express from 'express';
+import { GoogleAuthDto } from '../../dtos/google-auth.dto';
+import { AppleAuthDto } from '../../dtos/apple-auth.dto';
 
 @ApiTags('User-Auth')
 @Controller('user-auth')
@@ -49,13 +51,23 @@ export class UserAuthController {
   }
 
   @Post('login/google')
-  async googleLogin(@Body() data: any) {
+  async googleLogin(@Body() data: GoogleAuthDto) {
     return await this.userAuthService.googleLogin(data.googleToken, data.userInfo);
   }
 
   @Post('signup/google')
-  async googleSignup(@Body() data: any) {
+  async googleSignup(@Body() data: GoogleAuthDto) {
     return await this.userAuthService.googleSignup(data.googleToken, data.userInfo);
+  }
+
+  @Post('login/apple')
+  async appleLogin(@Body() data: AppleAuthDto) {
+    return await this.userAuthService.appleLogin(data.identityToken, data.userInfo);
+  }
+
+  @Post('signup/apple')
+  async appleSignup(@Body() data: AppleAuthDto) {
+    return await this.userAuthService.appleSignup(data.identityToken, data.userInfo);
   }
 
   @Post('forgot-password')

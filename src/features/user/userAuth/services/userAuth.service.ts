@@ -17,6 +17,10 @@ import { LoginDto } from '../dtos/login.dto';
 import { UpdateWorkerDto } from '../dtos/updateWorker.dto';
 import { ConfigService } from '@nestjs/config';
 import { Employee } from '../../employee/entities/employee.entity';
+import { EmailService } from '../../../email/email.service';
+import { OtpService } from '../../../email/otp.service';
+import { GoogleVerificationService } from './google-verification.service';
+import { AppleVerificationService } from './apple-verification.service';
 
 
 @Injectable()
@@ -28,6 +32,10 @@ export class UserAuthService {
 
     private jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly emailService: EmailService,
+    private readonly otpService: OtpService,
+    private readonly googleVerificationService: GoogleVerificationService,
+    private readonly appleVerificationService: AppleVerificationService,
   ) { }
 
 
@@ -43,7 +51,7 @@ export class UserAuthService {
 
 
 
-  async signup(data: UserAuthDto): Promise<UserAuth> {
+  async signup(data: UserAuthDto): Promise<{ message: string; email: string }> {
 
     const { email, phoneNumber } = data;
     const existingUser = await this.userAuthModel.findOne({
@@ -78,9 +86,26 @@ export class UserAuthService {
     const hashedPassword = await bcrypt.hash(data.password, saltOrRounds);
     data.password = hashedPassword;
 
-    const newUser = this.userAuthModel.create(data);
+    // Create user with unverified status
+    const newUser = await this.userAuthModel.create({
+      ...data,
+      isVerified: false,
+    });
 
-    return newUser;
+    // Generate and send OTP
+    try {
+      const otp = await this.otpService.generateOtp(email, 'signup');
+      await this.emailService.sendOtpEmail(email, otp, 'signup');
+    } catch (error) {
+      // Delete user if email sending fails
+      await this.userAuthModel.deleteOne({ _id: newUser._id });
+      throw new BadRequestException('Failed to send verification email. Please try again.');
+    }
+
+    return {
+      message: 'User registered successfully. OTP sent to your email.',
+      email: email,
+    };
 
   }
 
@@ -361,87 +386,210 @@ export class UserAuthService {
   }
 
   async googleLogin(googleToken: string, userInfo: any) {
-    const { email, name, picture, sub } = userInfo;
+    try {
+      // Verify the Google token
+      const verifiedUserInfo = await this.googleVerificationService.verifyGoogleToken(googleToken);
+      const { email, name, picture, sub } = userInfo || verifiedUserInfo;
 
-    let user = await this.userAuthModel.findOne({ email });
+      let user = await this.userAuthModel.findOne({ email });
 
-    if (!user) {
-      throw new NotFoundException('No account found with this email. Please sign up first.');
-    }
+      if (!user) {
+        throw new NotFoundException('No account found with this email. Please sign up first.');
+      }
 
-    if (!user.googleId) {
-      user.googleId = sub;
-      user.avatar = picture;
-      await user.save();
-    }
+      if (!user.googleId) {
+        user.googleId = sub;
+        if (picture) user.avatar = picture;
+        await user.save();
+      }
 
-    const payload = {
-      sub: user._id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const token = await this.jwtService.signAsync(payload, {
-      secret: 'a-string-secret-at-least-256-bits-long',
-    });
-
-    return {
-      success: true,
-      message: 'Google login successful',
-      token,
-      user: {
-        id: user._id,
-        fullName: user.fullName,
+      const payload = {
+        sub: user._id,
         email: user.email,
-        phoneNumber: user.phoneNumber,
         role: user.role,
-      },
-    };
+      };
+
+      const token = await this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+      });
+
+      return {
+        success: true,
+        message: 'Google login successful',
+        token,
+        user: {
+          id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          role: user.role,
+        },
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error.message || 'Google login failed');
+    }
   }
 
   async googleSignup(googleToken: string, userInfo: any) {
-    const { email, name, picture, sub } = userInfo;
+    try {
+      // Verify the Google token
+      const verifiedUserInfo = await this.googleVerificationService.verifyGoogleToken(googleToken);
+      const { email, name, picture, sub } = userInfo || verifiedUserInfo;
 
-    const existingUser = await this.userAuthModel.findOne({ email });
+      const existingUser = await this.userAuthModel.findOne({ email });
 
-    if (existingUser) {
-      throw new BadRequestException('An account with this email already exists. Please login instead.');
-    }
+      if (existingUser) {
+        throw new BadRequestException('An account with this email already exists. Please login instead.');
+      }
 
-    const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(randomPassword, 12);
+      const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(randomPassword, 12);
 
-    const newUser = await this.userAuthModel.create({
-      fullName: name,
-      email: email,
-      password: hashedPassword,
-      role: 'User',
-      googleId: sub,
-      avatar: picture,
-      isVerified: true,
-    });
+      const newUser = await this.userAuthModel.create({
+        fullName: name,
+        email: email,
+        password: hashedPassword,
+        role: 'User',
+        googleId: sub,
+        avatar: picture,
+        isVerified: true,
+      });
 
-    const payload = {
-      sub: newUser._id,
-      email: newUser.email,
-      role: newUser.role,
-    };
-
-    const token = await this.jwtService.signAsync(payload, {
-      secret: 'a-string-secret-at-least-256-bits-long',
-    });
-
-    return {
-      success: true,
-      message: 'Google signup successful',
-      token,
-      user: {
-        id: newUser._id,
-        fullName: newUser.fullName,
+      const payload = {
+        sub: newUser._id,
         email: newUser.email,
-        phoneNumber: newUser.phoneNumber,
         role: newUser.role,
-      },
-    };
+      };
+
+      const token = await this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+      });
+
+      return {
+        success: true,
+        message: 'Google signup successful',
+        token,
+        user: {
+          id: newUser._id,
+          fullName: newUser.fullName,
+          email: newUser.email,
+          phoneNumber: newUser.phoneNumber,
+          role: newUser.role,
+        },
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Google signup failed');
+    }
+  }
+
+  async appleLogin(identityToken: string, userInfo: any) {
+    try {
+      // Verify the Apple token
+      const verifiedUserInfo = await this.appleVerificationService.verifyAppleToken(identityToken);
+      const { email, sub } = userInfo || verifiedUserInfo;
+
+      let user = await this.userAuthModel.findOne({ email });
+
+      if (!user) {
+        throw new NotFoundException('No account found with this email. Please sign up first.');
+      }
+
+      if (!user.appleId) {
+        user.appleId = sub;
+        await user.save();
+      }
+
+      const payload = {
+        sub: user._id,
+        email: user.email,
+        role: user.role,
+      };
+
+      const token = await this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+      });
+
+      return {
+        success: true,
+        message: 'Apple login successful',
+        token,
+        user: {
+          id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          role: user.role,
+        },
+      };
+    } catch (error) {
+      throw new UnauthorizedException(error.message || 'Apple login failed');
+    }
+  }
+
+  async appleSignup(identityToken: string, userInfo: any) {
+    try {
+      // Verify the Apple token
+      const verifiedUserInfo = await this.appleVerificationService.verifyAppleToken(identityToken);
+      const { email, sub, name } = userInfo || verifiedUserInfo;
+
+      if (!email) {
+        throw new BadRequestException('Email is required for Apple signup');
+      }
+
+      const existingUser = await this.userAuthModel.findOne({ email });
+
+      if (existingUser) {
+        throw new BadRequestException('An account with this email already exists. Please login instead.');
+      }
+
+      const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      const hashedPassword = await bcrypt.hash(randomPassword, 12);
+
+      // Extract full name from userInfo or Apple token
+      let fullName = 'Apple User';
+      if (name) {
+        if (typeof name === 'string') {
+          fullName = name;
+        } else if (name.firstName && name.lastName) {
+          fullName = `${name.firstName} ${name.lastName}`;
+        } else if (name.firstName) {
+          fullName = name.firstName;
+        }
+      }
+
+      const newUser = await this.userAuthModel.create({
+        fullName: fullName,
+        email: email,
+        password: hashedPassword,
+        role: 'User',
+        appleId: sub,
+        isVerified: true,
+      });
+
+      const payload = {
+        sub: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+      };
+
+      const token = await this.jwtService.signAsync(payload, {
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+      });
+
+      return {
+        success: true,
+        message: 'Apple signup successful',
+        token,
+        user: {
+          id: newUser._id,
+          fullName: newUser.fullName,
+          email: newUser.email,
+          phoneNumber: newUser.phoneNumber,
+          role: newUser.role,
+        },
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message || 'Apple signup failed');
+    }
   }
 }

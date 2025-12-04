@@ -3,14 +3,18 @@ import { BookingController } from './controllers/bookingcontroller/bookingcontro
 import { BookingServiceService } from './booking-service/booking-service.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Booking, bookingSchema } from './entities/Booking.entity';
-import { UserAuthService } from '../user/userAuth/services/userAuth.service';
 import employeeSchema from '../user/employee/entities/employee.entity';
 import userAuthSchema from '../user/userAuth/entities/userAuth.entity';
+import { UserAuthModule } from '../user/userAuth/userAuth.module';
 
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: Booking.name, schema: bookingSchema }, { name: 'UserAuth', schema: userAuthSchema }, { name: 'Employee', schema: employeeSchema }])],
+  imports: [
+    MongooseModule.forFeature([{ name: Booking.name, schema: bookingSchema }, { name: 'UserAuth', schema: userAuthSchema }, { name: 'Employee', schema: employeeSchema }]),
+    UserAuthModule
+  ],
   controllers: [BookingController],
-  providers: [BookingServiceService, UserAuthService]
+  providers: [BookingServiceService],
+  exports: [BookingServiceService]
 })
 export class BookingModule { }

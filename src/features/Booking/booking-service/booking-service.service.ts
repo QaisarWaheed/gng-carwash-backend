@@ -27,6 +27,26 @@ export class BookingServiceService {
         return newBooking
     }
 
+    async getAvailableEmployees(date: Date, timeSlot: string): Promise<any[]> {
+        const employees = await this.employeeModel.find();
+        
+        const availableEmployees = employees.filter((employee) => {
+            const slotAvailability = employee.availabilitySlots.find(
+                (slot) =>
+                    new Date(slot.date).toDateString() === new Date(date).toDateString() &&
+                    slot.timeSlot === timeSlot &&
+                    slot.isAvailable
+            );
+            return !!slotAvailability;
+        });
+
+        return availableEmployees.map((emp) => ({
+            _id: emp._id,
+            userId: emp.userId,
+            completedJobs: emp.completedJobs,
+        }));
+    }
+
     async getAllBooking(): Promise<Booking[]> {
         const allBooking = await this.bookingModel.find()
         return allBooking
@@ -73,6 +93,29 @@ export class BookingServiceService {
         if (!booking) {
             throw new NotFoundException('Booking not found');
         }
+
+        // Check if employee has availability for the requested date and time slot
+        const slotAvailability = employee.availabilitySlots.find(
+            (slot) =>
+                new Date(slot.date).toDateString() === new Date(booking.date).toDateString() &&
+                slot.timeSlot === booking.timeSlot
+        );
+
+        if (!slotAvailability) {
+            throw new BadRequestException(
+                `Employee is not available on ${booking.date} at ${booking.timeSlot}. Please select a different slot or employee.`
+            );
+        }
+
+        if (!slotAvailability.isAvailable) {
+            throw new BadRequestException(
+                `The selected slot (${booking.timeSlot} on ${booking.date}) is not available. Please select a different slot.`
+            );
+        }
+
+        // Mark the slot as unavailable once assigned
+        slotAvailability.isAvailable = false;
+        await employee.save();
 
         booking.assignedEmployeeId = new Types.ObjectId(employeeId);
         booking.status = "confirmed";

@@ -3,6 +3,12 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import mongoose, { Document, Types } from "mongoose";
 import flagSchema, { Flag } from "./flags.entity";
 
+export interface AvailabilitySlot {
+  date: Date;
+  timeSlot: string;
+  isAvailable: boolean;
+}
+
 @Schema({ timestamps: true })
 export class Employee extends Document {
 
@@ -15,7 +21,17 @@ export class Employee extends Document {
     @Prop({ type: [{ type: Types.ObjectId, ref: 'Booking' }] })
     assignedBookings: Types.ObjectId[];
 
-
+    @Prop({
+        type: [
+            {
+                date: { type: Date, required: true },
+                timeSlot: { type: String, required: true },
+                isAvailable: { type: Boolean, default: true },
+            },
+        ],
+        default: [],
+    })
+    availabilitySlots: AvailabilitySlot[];
 
     @Prop({
         type: [
@@ -34,10 +50,6 @@ export class Employee extends Document {
 
     @Prop({ type: [flagSchema], default: [] })
     flags: Flag[];
-
-
-
-
 }
 
 const employeeSchema = SchemaFactory.createForClass(Employee)

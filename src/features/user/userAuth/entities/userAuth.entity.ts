@@ -39,6 +39,9 @@ export class UserAuth {
   googleId?: string;
 
   @Prop({ type: String, required: false })
+  appleId?: string;
+
+  @Prop({ type: String, required: false })
   avatar?: string;
 
   @Prop({ type: Boolean, default: false })

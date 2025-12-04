@@ -7,10 +7,11 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly configService: ConfigService) {
+    const secret = configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long';
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'a-string-secret-at-least-256-bits-long'
+      secretOrKey: secret
     });
   }
 

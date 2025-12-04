@@ -7,9 +7,11 @@ import {
   IsMongoId,
   ValidateNested,
   IsDateString,
+  Validate,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsValidBookingDate } from '../validators/booking-date.validator';
 
  
 
@@ -32,6 +34,7 @@ export class CreateBookingDto {
   @ApiProperty()
   @IsDateString()
   @IsNotEmpty()
+  @Validate(IsValidBookingDate)
   date: Date;
 
   @ApiProperty()

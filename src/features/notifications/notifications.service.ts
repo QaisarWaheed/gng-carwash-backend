@@ -30,11 +30,11 @@ export class NotificationsService {
       .exec();
   }
 
-  async findOne(id: string): Promise<Notification> {
+  async findOne(id: string): Promise<Notification | null> {
     return this.notificationModel.findById(id).exec();
   }
 
-  async markAsRead(id: string): Promise<Notification> {
+  async markAsRead(id: string): Promise<Notification | null> {
     return this.notificationModel.findByIdAndUpdate(
       id,
       { isRead: true, readAt: new Date() },
@@ -49,7 +49,7 @@ export class NotificationsService {
     ).exec();
   }
 
-  async delete(id: string): Promise<Notification> {
+  async delete(id: string): Promise<Notification | null> {
     return this.notificationModel.findByIdAndDelete(id).exec();
   }
 

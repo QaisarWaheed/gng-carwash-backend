@@ -12,6 +12,7 @@ import { VehicleModule } from './features/user/vehicle/vehicle/vehicle.module';
 import { UserAddressModule } from './features/user/services/user-address/user-address.module';
 import { StripeModule } from './features/stripe/stripe.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
+import { EmailModule } from './features/email/email.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { NotificationsModule } from './features/notifications/notifications.modu
     UserAddressModule,
     StripeModule,
     NotificationsModule,
+    EmailModule,
   ],
 })
 export class AppModule {}
