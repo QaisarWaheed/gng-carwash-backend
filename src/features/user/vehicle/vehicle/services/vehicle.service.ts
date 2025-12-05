@@ -3,12 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateVehicleDto } from '../dtos/createVehicleDto';
 import { Vehicle } from '../entities/vehicle.entity';
+import { CloudinaryService } from 'src/features/cloudinary/cloudinary.service';
 
 @Injectable()
 export class VehicleService {
     constructor(
         @InjectModel(Vehicle.name)
         private readonly vehicleModel: Model<Vehicle>,
+        private readonly cloudinaryService: CloudinaryService,
     ) { }
 
     async createVehicle(dto: CreateVehicleDto) {
@@ -83,18 +85,21 @@ export class VehicleService {
         return { message: 'Default vehicle set successfully', vehicle: { ...obj, id: obj._id.toString() } };
     }
 
-    async uploadVehiclePhoto(id: string, photoUri: string) {
+    async uploadVehiclePhoto(id: string, file: any) {
         const vehicle = await this.vehicleModel.findById(id);
         if (!vehicle) throw new NotFoundException('Vehicle not found');
 
+        // Upload image to Cloudinary
+        const result = await this.cloudinaryService.uploadImage(file, 'vehicles');
+
         const updated = await this.vehicleModel.findByIdAndUpdate(
             id,
-            { $set: { photo: photoUri } },
+            { $set: { photo: result.secure_url, cloudinaryPublicId: result.public_id } },
             { new: true }
         );
 
         if (!updated) throw new NotFoundException('Vehicle not found');
         const obj = updated.toObject();
-        return { photoUrl: photoUri, vehicle: { ...obj, id: obj._id.toString() } };
+        return { photoUrl: result.secure_url, vehicle: { ...obj, id: obj._id.toString() } };
     }
 }

@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { VehicleService } from '../services/vehicle.service';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
 import { Roles } from 'src/decorators/Roles.decorator';
@@ -56,7 +57,8 @@ export class VehicleController {
 
     @Roles(Role.User)
     @Post(':id/photo')
-    async uploadVehiclePhoto(@Param('id') id: string, @Body() body: { photo: string }) {
-        return await this.vehicleService.uploadVehiclePhoto(id, body.photo);
+    @UseInterceptors(FileInterceptor('photo'))
+    async uploadVehiclePhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+        return await this.vehicleService.uploadVehiclePhoto(id, file);
     }
 }

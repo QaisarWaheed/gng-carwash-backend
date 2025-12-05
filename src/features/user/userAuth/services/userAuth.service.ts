@@ -145,7 +145,7 @@ export class UserAuthService {
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: 'a-string-secret-at-least-256-bits-long',
+      secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
     });
     return {
       success: true,
@@ -379,7 +379,7 @@ export class UserAuthService {
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: 'a-string-secret-at-least-256-bits-long',
+      secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
     });
 
     return { token };

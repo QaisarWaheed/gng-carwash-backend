@@ -27,6 +27,12 @@ export class AdminService {
     image: string
 
     @Prop()
+    imageUrl: string
+
+    @Prop()
+    cloudinaryPublicId: string
+
+    @Prop()
     isActive: boolean
 
     @Prop()

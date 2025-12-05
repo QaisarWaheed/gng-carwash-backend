@@ -49,6 +49,9 @@ export class Vehicle {
     @Prop()
     photo?: string;
 
+    @Prop()
+    cloudinaryPublicId?: string;
+
     @Prop({ default: false })
     isDefault?: boolean;
 
