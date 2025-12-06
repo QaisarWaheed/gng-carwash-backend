@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpException, HttpStatus, Logger, NotFoundException, Param, Post, Put, UseGuards, Query } from '@nestjs/common';
 import { BookingServiceService } from '../../booking-service/booking-service.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CreateBookingDto } from '../../dtos/CreateBookingDto';
@@ -12,6 +12,8 @@ import { UpdateBookingDto } from '../../dtos/UpdateBookingDto';
 import { CreateReviewDto } from '../../dtos/ReviewbookingDto';
 import { ResolveFlagDto } from '../../dtos/ResolveFlagDto';
 import { Types } from 'mongoose';
+import { CheckAvailabilityDto } from '../../dtos/CheckAvailabilityDto';
+import { TIME_SLOTS } from '../../constants/time-slots.constants';
 
 @ApiTags("Booking")
 @ApiBearerAuth()
@@ -21,10 +23,39 @@ export class BookingController {
     private readonly logger = new Logger(BookingController.name);
     constructor(private readonly bookingServiceService: BookingServiceService) { }
 
+    /**
+     * Get all available time slots with capacity info
+     * Optional: Pass serviceId to filter based on service duration
+     */
+    @UseGuards(AuthGuardWithRoles)
+    @Roles(Role.User)
+    @Get('available-slots')
+    async getAvailableTimeSlots(
+        @Query('date') date: string,
+        @Query('serviceId') serviceId?: string
+    ) {
+        try {
+            if (!date) {
+                throw new BadRequestException('Date is required');
+            }
+            const bookingDate = new Date(date);
+            return await this.bookingServiceService.getAvailableTimeSlots(bookingDate, serviceId);
+        } catch (e) {
+            throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * Get all time slots configuration
+     */
+    @Get('time-slots')
+    async getAllTimeSlots() {
+        return TIME_SLOTS;
+    }
 
     @UseGuards(AuthGuardWithRoles)
-    @Roles(Role.Manager || Role.Admin)
-    @Get()
+    @Roles(Role.Manager, Role.Admin)
+    @Get('all')
     async getAllBooking() {
         try {
             return await this.bookingServiceService.getAllBooking()
@@ -35,14 +66,20 @@ export class BookingController {
     }
 
 
-    @UseGuards(AuthGuardWithRoles)
-    @Roles(Role.User)
+    // Temporarily remove guard for debugging
+    // @UseGuards(AuthGuardWithRoles)
+    // @Roles(Role.User)
     @Get('user-bookings/:userId')
     async getAllBookingsByUserId(@Param('userId') userId: string) {
+        console.log('getAllBookingsByUserId called with userId:', userId);
         try {
-            return await this.bookingServiceService.getBookingByUserId(userId);
+            const bookings = await this.bookingServiceService.getBookingByUserId(userId);
+            console.log('Found bookings:', Array.isArray(bookings) ? bookings.length : 0);
+            if (!bookings) return [];
+            return bookings;
         }
         catch (e) {
+            console.error('Error in getAllBookingsByUserId:', e);
             throw new HttpException(e.message, HttpStatus.BAD_REQUEST)
         }
     }
@@ -74,9 +111,14 @@ export class BookingController {
     @Post()
     async createNewBooking(@Body() data: CreateBookingDto) {
         try {
-            return await this.bookingServiceService.createBooking(data)
+            console.log('Creating booking for customerId:', data.customerId);
+            const booking = await this.bookingServiceService.createBooking(data);
+            console.log('Booking created successfully with ID:', booking._id);
+            console.log('Booking customerId:', booking.customerId);
+            return booking;
         }
         catch (e) {
+            console.error('Error creating booking:', e.message);
             throw new HttpException(e.message, HttpStatus.BAD_REQUEST)
         }
     }
@@ -84,7 +126,7 @@ export class BookingController {
 
 
     @UseGuards(AuthGuardWithRoles)
-    @Roles(Role.Manager)
+    @Roles(Role.Admin, Role.Manager)
     @Put('assignEmployee/:bookingId')
     async assignEmployee(@Param('bookingId') bookingId: string, @Body() data: AssignEmployeeDto) {
         try {
@@ -96,6 +138,22 @@ export class BookingController {
         }
     }
 
+
+    @UseGuards(AuthGuardWithRoles)
+    @Roles(Role.Employee)
+    @Get('employee/my-bookings/:employeeId')
+    async getEmployeeBookings(@Param('employeeId') employeeId: string) {
+        try {
+            this.logger.log(`Fetching bookings for employee: ${employeeId}`);
+            const bookings = await this.bookingServiceService.getEmployeeBookings(employeeId);
+            this.logger.log(`Found ${bookings.length} bookings`);
+            return bookings;
+        }
+        catch (e) {
+            this.logger.error(`Error fetching employee bookings: ${e.message}`);
+            throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+        }
+    }
 
     @UseGuards(AuthGuardWithRoles)
     @Roles(Role.Employee)
@@ -118,6 +176,19 @@ export class BookingController {
         }
         catch (e) {
             throw new HttpException(e.message, HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @UseGuards(AuthGuardWithRoles)
+    @Roles(Role.Manager || Role.Admin)
+    @Put('reschedule/:id')
+    async rescheduleBooking(@Param('id') id: string, @Body() data: { date: string; timeSlot: string; reason?: string }) {
+        try {
+            return await this.bookingServiceService.rescheduleBooking(id, data.date, data.timeSlot, data.reason);
+        }
+        catch (e) {
+            if (e instanceof HttpException) throw e;
+            throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
         }
     }
 

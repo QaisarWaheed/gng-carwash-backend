@@ -143,8 +143,7 @@ export class UserAuthController {
   }
 
   @UseGuards(AuthGuardWithRoles)
-  @Roles(Role.Admin)
-  @Roles(Role.Manager)
+  @Roles(Role.Admin, Role.Manager)
   @Get('get-employees')
   async findAllEmployees(role: Role) {
     role = Role.Employee;

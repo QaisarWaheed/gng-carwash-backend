@@ -7,37 +7,62 @@ import {
   Patch,
   Delete,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UpdateAddressDto } from '../../dto/update-user-address.dto';
 import { CreateAddressDto } from '../../dto/user-address.dto';
 import { UserAddressService } from './user-address.service';
+import { AuthGuardWithRoles } from 'src/guards/authGuart';
 
 
 @Controller('addresses')
+@UseGuards(AuthGuardWithRoles)
 export class UserAddressController {
   constructor(private readonly addressService: UserAddressService) {}
 
   @Post()
-  create(@Req() req, @Body() dto: CreateAddressDto) {
-    return this.addressService.create(req.user._id, dto);
+  async create(@Req() req, @Body() dto: CreateAddressDto) {
+    console.log('Address create called with dto:', JSON.stringify(dto));
+    console.log('req.user:', req.user ? JSON.stringify({ sub: req.user.sub, email: req.user.email }) : 'undefined');
+    try {
+      const userId = req.user.sub || req.user._id;
+      const result = await this.addressService.create(userId, dto);
+      console.log('Address created successfully:', result);
+      return result.toJSON();
+    } catch (error) {
+      console.error('Error in address controller:', error.message, error.stack);
+      throw error;
+    }
   }
 
   @Get()
-  findUserAddresses(@Req() req) {
-    return this.addressService.findUserAddresses(req.user._id);
+  async findUserAddresses(@Req() req) {
+    console.log('req.user:', req.user ? JSON.stringify({ sub: req.user.sub, email: req.user.email }) : 'undefined');
+    
+    const userId = req.user.sub || req.user._id;
+    if (!userId) {
+      throw new Error('User not authenticated or user ID not found');
+    }
+    console.log('Fetching addresses for userId:', userId);
+    const addresses = await this.addressService.findUserAddresses(userId);
+    console.log(`Found ${addresses.length} addresses for user ${userId}`);
+    return addresses.map(addr => addr.toJSON());
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Req() req,
     @Param('id') id: string,
     @Body() dto: UpdateAddressDto,
   ) {
-    return this.addressService.update(req.user._id, id, dto);
+    const userId = req.user.sub || req.user._id;
+    const result = await this.addressService.update(userId, id, dto);
+    return result.toJSON();
   }
 
   @Delete(':id')
   remove(@Req() req, @Param('id') id: string) {
-    return this.addressService.remove(req.user._id, id);
+    const userId = req.user.sub || req.user._id;
+    return this.addressService.remove(userId, id);
   }
 }

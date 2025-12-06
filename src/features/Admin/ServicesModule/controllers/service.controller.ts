@@ -17,7 +17,9 @@ export class ServiceController {
     @Get('get-all-services')
     async getAllServices() {
         try {
-            return await this.adminService.getAllServices()
+            const services = await this.adminService.getAllServices();
+            console.log('Returning services:', JSON.stringify(services, null, 2));
+            return services;
         }
         catch (e) {
             throw new HttpException(e.message, HttpStatus.NOT_FOUND)

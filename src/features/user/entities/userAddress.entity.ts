@@ -51,8 +51,34 @@ export class UserAddress {
   @Prop({ default: true })
   isDefault: boolean;
 
+  @Prop({ type: Number })
+  latitude?: number;
+
+  @Prop({ type: Number })
+  longitude?: number;
+
+  @Prop({ type: String })
+  placeId?: string;
+
+  @Prop({ type: String })
+  formattedAddress?: string;
+
   declare createdAt: Date;
   declare updatedAt: Date;
 }
 
 export const UserAddressSchema = SchemaFactory.createForClass(UserAddress);
+
+UserAddressSchema.index({ latitude: 1, longitude: 1 });
+
+UserAddressSchema.set('toJSON', {
+  transform: (doc, ret: any) => {
+    ret.id = ret._id.toString();
+    delete ret._id;
+    delete ret.__v;
+    if (ret.customerId) {
+      ret.customerId = ret.customerId.toString();
+    }
+    return ret;
+  },
+});

@@ -3,6 +3,7 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
+import { getDubaiDayStart, getDubaiNow } from 'src/utils/timezone.utils';
 
 @ValidatorConstraint({ name: 'isValidBookingDate', async: false })
 export class IsValidBookingDate implements ValidatorConstraintInterface {
@@ -11,16 +12,15 @@ export class IsValidBookingDate implements ValidatorConstraintInterface {
       return false;
     }
 
-    const bookingDate = new Date(value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const bookingDate = getDubaiDayStart(new Date(value));
+    const today = getDubaiDayStart(getDubaiNow());
 
-    // Check if booking is in the past
+    
     if (bookingDate < today) {
       return false;
     }
 
-    // Check if booking is within 7 days
+   
     const maxDate = new Date(today);
     maxDate.setDate(maxDate.getDate() + 7);
 
@@ -32,6 +32,6 @@ export class IsValidBookingDate implements ValidatorConstraintInterface {
   }
 
   defaultMessage(args: ValidationArguments) {
-    return 'Booking date must be within the next 7 days and cannot be in the past';
+    return 'Booking date must be within the next 7 days and cannot be in the past (Dubai time)';
   }
 }

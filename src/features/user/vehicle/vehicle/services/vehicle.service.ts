@@ -13,18 +13,46 @@ export class VehicleService {
 
     async createVehicle(dto: CreateVehicleDto) {
         try {
-            const exists = await this.vehicleModel.findOne({ plateNumber: dto.plateNumber });
-            if (exists) throw new BadRequestException('Vehicle with this plate number already exists');
+            console.log('VehicleService.createVehicle - dto:', JSON.stringify(dto));
+            
+            if (!dto.customerId) {
+                console.error('customerId is missing in dto');
+                throw new BadRequestException('Customer ID is required');
+            }
 
-            const vehicle = await this.vehicleModel.create({
+            // Check if plate number already exists for this customer
+            const exists = await this.vehicleModel.findOne({ 
+                plateNumber: dto.plateNumber,
+                plateCode: dto.plateCode 
+            });
+            
+            if (exists) {
+                console.log('Vehicle with plate number already exists:', dto.plateCode, dto.plateNumber);
+                // Check if it belongs to the same customer
+                if (exists.customerId.toString() === dto.customerId) {
+                    throw new BadRequestException('You have already registered a vehicle with this plate number');
+                } else {
+                    throw new BadRequestException('This plate number is already registered in the system');
+                }
+            }
+
+            const vehicleData = {
                 ...dto,
                 customerId: new Types.ObjectId(dto.customerId),
-            });
+            };
+            console.log('Creating vehicle with data:', JSON.stringify(vehicleData));
+
+            const vehicle = await this.vehicleModel.create(vehicleData);
+            console.log('Vehicle created in DB with _id:', vehicle._id);
 
             const vehicleObj = vehicle.toObject();
             return { message: 'Vehicle created successfully', vehicle: { ...vehicleObj, id: vehicleObj._id.toString() } };
         } catch (error) {
-            throw new BadRequestException(error.message);
+            console.error('Error in VehicleService.createVehicle:', error.message, error.stack);
+            if (error instanceof BadRequestException) {
+                throw error;
+            }
+            throw new BadRequestException(error.message || 'Failed to create vehicle');
         }
     }
     async getAllVehicles() {

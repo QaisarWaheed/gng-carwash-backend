@@ -12,6 +12,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsValidBookingDate } from '../validators/booking-date.validator';
+import { IsValidTimeSlot } from '../validators/time-slot.validator';
 
  
 
@@ -40,26 +41,47 @@ export class CreateBookingDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  @Validate(IsValidTimeSlot)
   timeSlot: string;
 
 
   @ApiProperty()
- @IsNotEmpty()
+  @IsNotEmpty()
   @IsString()
   addressId: string; 
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  vehicleSubType?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  additionalNotes?: string;
 
   @ApiProperty()
   @IsOptional()
   @IsEnum(['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'])
   status?: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
 
-  // @ApiProperty()
-  // @IsNumber()
-  // @IsNotEmpty()
-  // totalPrice: number;
+  @ApiProperty()
+  @IsNumber()
+  @IsNotEmpty()
+  totalPrice: number;
 
   @ApiProperty()
   @IsOptional()
   @IsEnum(['Unpaid', 'Paid', 'Refunded'])
   paymentStatus?: 'Unpaid' | 'Paid' | 'Refunded';
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  paymentIntentId?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  tip?: number;
 }

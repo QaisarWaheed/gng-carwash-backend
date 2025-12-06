@@ -4,10 +4,10 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAddressDto {
 
-    @ApiProperty()
+    @ApiProperty({ required: false })
     @IsMongoId()
-    @IsNotEmpty()
-    customerId: string;
+    @IsOptional()
+    customerId?: string;
     
   @IsEnum(AddressType)
   @ApiProperty()
@@ -65,4 +65,22 @@ export class CreateAddressDto {
 
   @IsBoolean()
   isDefault: boolean;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  latitude?: number;
+
+  @IsOptional()
+  @ApiProperty({ required: false })
+  longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false })
+  placeId?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false })
+  formattedAddress?: string;
 }

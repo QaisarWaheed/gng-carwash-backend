@@ -14,7 +14,7 @@ export class Booking {
   @Prop({ type: Types.ObjectId, ref: 'Vehicle', required: true })
   vehicleId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Service', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'AdminService', required: true })
   serviceId: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'UserAuth', default: null })
@@ -82,14 +82,20 @@ export class Booking {
   @Prop({ type: Number })
   serviceCharge?: number;
 
+  @Prop({ type: Number, default: 0 })
+  tip?: number;
+
   @Prop({ type: String, enum: ['sedan', 'suv', 'coupe', 'hatchback', 'truck'] })
   vehicleSubType?: 'sedan' | 'suv' | 'coupe' | 'hatchback' | 'truck';
 
-  @Prop({ type: [Types.ObjectId], ref: 'Service' })
+  @Prop({ type: [Types.ObjectId], ref: 'AdminService' })
   services?: Types.ObjectId[];
 
   @Prop({ type: String })
   additionalNotes?: string;
+
+  @Prop({ type: String })
+  paymentIntentId?: string;
 }
 
 export const bookingSchema = SchemaFactory.createForClass(Booking);

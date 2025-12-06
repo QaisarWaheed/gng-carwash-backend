@@ -3,9 +3,10 @@ import { IsString, IsNumber, IsOptional, IsBoolean } from "class-validator";
 import type { VehicleSubType, VehicleType } from "../entities/vehicle.entity";
 
 export class CreateVehicleDto {
-    @ApiProperty()
+    @ApiProperty({ required: false })
     @IsString()
-    customerId: string
+    @IsOptional()
+    customerId?: string
 
     @ApiProperty()
     @IsString()
