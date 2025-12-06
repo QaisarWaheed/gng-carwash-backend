@@ -13,9 +13,9 @@ import { UpdateAddressDto } from '../../dto/update-user-address.dto';
 import { CreateAddressDto } from '../../dto/user-address.dto';
 import { UserAddressService } from './user-address.service';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
+import { VerifiedUserGuard } from 'src/guards/verifiedUser.guard';
 import { Roles } from 'src/decorators/Roles.decorator';
 import { Role } from 'src/types/enum.class';
-
 
 @Controller('addresses')
 @UseGuards(AuthGuardWithRoles)
@@ -24,6 +24,7 @@ export class UserAddressController {
   constructor(private readonly addressService: UserAddressService) {}
 
   @Post()
+  @UseGuards(VerifiedUserGuard)
   create(@Req() req, @Body() dto: CreateAddressDto) {
     return this.addressService.create(req.user._id, dto);
   }
@@ -39,15 +40,13 @@ export class UserAddressController {
   }
 
   @Patch(':id')
-  update(
-    @Req() req,
-    @Param('id') id: string,
-    @Body() dto: UpdateAddressDto,
-  ) {
+  @UseGuards(VerifiedUserGuard)
+  update(@Req() req, @Param('id') id: string, @Body() dto: UpdateAddressDto) {
     return this.addressService.update(req.user._id, id, dto);
   }
 
   @Delete(':id')
+  @UseGuards(VerifiedUserGuard)
   remove(@Req() req, @Param('id') id: string) {
     return this.addressService.remove(req.user._id, id);
   }

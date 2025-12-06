@@ -57,7 +57,9 @@ export class StripeWebhookController {
     @Headers('stripe-signature') signature: string,
   ) {
     const secretKey = this.configService.get<string>('STRIPE_SECRET_KEY');
-    const webhookSecret = this.configService.get<string>('STRIPE_WEBHOOK_SECRET');
+    const webhookSecret = this.configService.get<string>(
+      'STRIPE_WEBHOOK_SECRET',
+    );
 
     if (!secretKey) {
       throw new BadRequestException('Stripe secret key not configured');
@@ -75,11 +77,7 @@ export class StripeWebhookController {
     const rawBody = req.rawBody || '';
 
     try {
-      event = stripe.webhooks.constructEvent(
-        rawBody,
-        signature,
-        webhookSecret,
-      );
+      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
     } catch (err) {
       console.log('⚠️ Webhook signature verification failed.', err.message);
       throw new BadRequestException('Invalid signature');
@@ -88,12 +86,15 @@ export class StripeWebhookController {
     if (event.type === 'payment_intent.succeeded') {
       const intent = event.data.object as Stripe.PaymentIntent;
       // Update booking payment status
-      await this.bookingService.makePayment(intent.metadata?.bookingId || intent.id, {
-        customerId: intent.metadata?.customerId || '',
-        paymentStatus: 'Paid',
-        paymentMethod: 'Card',
-        amount: (intent.amount || 0) / 100, // Convert from cents to dollars
-      });
+      await this.bookingService.makePayment(
+        intent.metadata?.bookingId || intent.id,
+        {
+          customerId: intent.metadata?.customerId || '',
+          paymentStatus: 'Paid',
+          paymentMethod: 'Card',
+          amount: (intent.amount || 0) / 100, // Convert from cents to dollars
+        },
+      );
     }
 
     return { received: true };

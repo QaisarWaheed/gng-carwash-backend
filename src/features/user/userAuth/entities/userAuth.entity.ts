@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 
@@ -26,8 +25,6 @@ export class UserAuth {
     default: 'User',
   })
   role: Roles;
-
-
 
   @Prop({ type: String, required: false })
   otp?: string;

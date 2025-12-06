@@ -1,13 +1,15 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Otp, OtpDocument } from './entities/otp.entity';
 
 @Injectable()
 export class OtpService {
-  constructor(
-    @InjectModel(Otp.name) private otpModel: Model<OtpDocument>,
-  ) {}
+  constructor(@InjectModel(Otp.name) private otpModel: Model<OtpDocument>) {}
 
   /**
    * Generate and save OTP
@@ -37,7 +39,11 @@ export class OtpService {
   /**
    * Verify OTP
    */
-  async verifyOtp(email: string, otp: string, purpose: string): Promise<boolean> {
+  async verifyOtp(
+    email: string,
+    otp: string,
+    purpose: string,
+  ): Promise<boolean> {
     const otpRecord = await this.otpModel.findOne({
       email,
       otp,

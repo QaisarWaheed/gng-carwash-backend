@@ -4,7 +4,6 @@ import { StripeWebhookController } from './stripe.controller';
 import { StripeService } from './stripe.service';
 import { BookingModule } from '../Booking/booking.module';
 
-
 @Module({
   imports: [ConfigModule, BookingModule],
   controllers: [StripeWebhookController],

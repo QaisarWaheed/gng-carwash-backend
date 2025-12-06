@@ -14,8 +14,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsValidBookingDate } from '../validators/booking-date.validator';
 import { IsValidTimeSlot } from '../validators/time-slot.validator';
 
- 
-
 export class CreateBookingDto {
   @ApiProperty()
   @IsMongoId()
@@ -44,11 +42,10 @@ export class CreateBookingDto {
   @Validate(IsValidTimeSlot)
   timeSlot: string;
 
-
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
-  addressId: string; 
+  addressId: string;
 
   @ApiProperty()
   @IsOptional()

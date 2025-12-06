@@ -8,7 +8,4 @@ export class UpdateBookingDto extends PartialType(CreateBookingDto) {
   @IsOptional()
   @IsEnum(['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'])
   status?: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-
-
-
 }

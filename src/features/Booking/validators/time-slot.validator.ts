@@ -3,7 +3,10 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
-import { VALID_TIME_SLOTS, TIME_SLOT_REGEX } from '../constants/time-slots.constants';
+import {
+  VALID_TIME_SLOTS,
+  TIME_SLOT_REGEX,
+} from '../constants/time-slots.constants';
 
 @ValidatorConstraint({ name: 'isValidTimeSlot', async: false })
 export class IsValidTimeSlot implements ValidatorConstraintInterface {
@@ -15,7 +18,6 @@ export class IsValidTimeSlot implements ValidatorConstraintInterface {
     if (!TIME_SLOT_REGEX.test(value)) {
       return false;
     }
-
 
     return VALID_TIME_SLOTS.includes(value);
   }

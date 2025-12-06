@@ -1,14 +1,20 @@
-import { IsString, IsEnum, IsOptional, IsBoolean, IsNotEmpty, IsMongoId } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  IsNotEmpty,
+  IsMongoId,
+} from 'class-validator';
 import { AddressType } from '../entities/userAddress.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateAddressDto {
+  @ApiProperty({ required: false })
+  @IsMongoId()
+  @IsOptional()
+  customerId?: string;
 
-    @ApiProperty({ required: false })
-    @IsMongoId()
-    @IsOptional()
-    customerId?: string;
-    
   @IsEnum(AddressType)
   @ApiProperty()
   type: AddressType;
@@ -30,22 +36,18 @@ export class CreateAddressDto {
   @IsOptional()
   @IsString()
   @ApiProperty()
-
   apartment?: string;
 
   @IsString()
   @ApiProperty()
-
   area: string;
 
   @IsString()
   @ApiProperty()
-
   city: string;
 
   @IsString()
   @ApiProperty()
-
   emirate: string;
 
   @IsOptional()

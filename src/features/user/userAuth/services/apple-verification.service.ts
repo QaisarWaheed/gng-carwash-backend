@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { verify } from 'jsonwebtoken';
@@ -14,7 +13,7 @@ export class AppleVerificationService {
     try {
       // Decode the token header to get the kid (key ID)
       const decoded = this.decodeTokenHeader(idToken);
-      
+
       // In development, we'll accept the token without full verification
       // In production, verify against Apple's public keys
       return this.decodeTokenWithoutVerification(idToken);
@@ -27,7 +26,9 @@ export class AppleVerificationService {
   private decodeTokenHeader(token: string): any {
     const headerBase64 = token.split('.')[0];
     const headerBase64Url = headerBase64.replace(/-/g, '+').replace(/_/g, '/');
-    const header = JSON.parse(Buffer.from(headerBase64Url, 'base64').toString('utf-8'));
+    const header = JSON.parse(
+      Buffer.from(headerBase64Url, 'base64').toString('utf-8'),
+    );
     return header;
   }
 

@@ -1,53 +1,58 @@
-/* eslint-disable prettier/prettier */
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose, { ObjectId } from "mongoose";
-export type VehicleType = 'Sedan' | 'SUV' | 'Bike' | 'Caravan' | 'Buggy' | 'Jetski' | 'MPV' | 'Others';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { ObjectId } from 'mongoose';
+export type VehicleType =
+  | 'Sedan'
+  | 'SUV'
+  | 'Bike'
+  | 'Caravan'
+  | 'Buggy'
+  | 'Jetski'
+  | 'MPV'
+  | 'Others';
 export interface VehicleTypePrice {
-    vehicleType: VehicleType;
-    price: number;
+  vehicleType: VehicleType;
+  price: number;
 }
 @Schema({ timestamps: true })
 export class AdminService {
+  declare _id: mongoose.Types.ObjectId;
 
-    declare _id: mongoose.Types.ObjectId
+  @Prop()
+  name: string;
 
-    @Prop()
-    name: string
+  @Prop()
+  description: string;
 
-    @Prop()
-    description: string
+  @Prop()
+  price: number;
 
-    @Prop()
-    price: number
+  @Prop()
+  estimatedTime: number;
 
-    @Prop()
-    estimatedTime: number
+  @Prop()
+  image: string;
 
-    @Prop()
-    image: string
+  @Prop()
+  imageUrl: string;
 
-    @Prop()
-    imageUrl: string
+  @Prop()
+  cloudinaryPublicId: string;
 
-    @Prop()
-    cloudinaryPublicId: string
+  @Prop()
+  isActive: boolean;
 
-    @Prop()
-    isActive: boolean
+  @Prop()
+  vehicleTypes: VehicleType[];
 
-    @Prop()
-    vehicleTypes: VehicleType[];
+  @Prop()
+  vehiclePricing?: VehicleTypePrice[];
 
-    @Prop()
-    vehiclePricing?: VehicleTypePrice[];
+  declare createdAt: Date;
 
-    declare createdAt: Date
-
-    declare updatedAt: Date
-
+  declare updatedAt: Date;
 }
 
-const adminServiceSchema = SchemaFactory.createForClass(AdminService)
+const adminServiceSchema = SchemaFactory.createForClass(AdminService);
 
 adminServiceSchema.set('toJSON', {
   transform: (doc, ret: any) => {
@@ -57,4 +62,4 @@ adminServiceSchema.set('toJSON', {
   },
 });
 
-export default adminServiceSchema
+export default adminServiceSchema;

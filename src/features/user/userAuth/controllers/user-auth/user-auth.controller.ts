@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Body,
   Controller,
@@ -9,7 +8,7 @@ import {
   Post,
   Req,
   UseGuards,
-  Headers
+  Headers,
 } from '@nestjs/common';
 import { UserAuthService } from '../../services/userAuth.service';
 import { UserAuthDto } from '../../dtos/userAuth.dto';
@@ -30,15 +29,12 @@ import { AppleAuthDto } from '../../dtos/apple-auth.dto';
 @Controller('user-auth')
 @ApiBearerAuth()
 export class UserAuthController {
-  constructor(private readonly userAuthService: UserAuthService) { }
-
+  constructor(private readonly userAuthService: UserAuthService) {}
 
   @Post('check-token')
   checkToken(@Headers('authorization') authHeader: string) {
     return { receivedToken: authHeader };
   }
-
-
 
   @Post('signup')
   async signupUser(@Body() data: UserAuthDto) {
@@ -52,27 +48,44 @@ export class UserAuthController {
 
   @Post('login/google')
   async googleLogin(@Body() data: GoogleAuthDto) {
-    return await this.userAuthService.googleLogin(data.googleToken, data.userInfo);
+    return await this.userAuthService.googleLogin(
+      data.googleToken,
+      data.userInfo,
+    );
   }
 
   @Post('signup/google')
   async googleSignup(@Body() data: GoogleAuthDto) {
-    return await this.userAuthService.googleSignup(data.googleToken, data.userInfo);
+    return await this.userAuthService.googleSignup(
+      data.googleToken,
+      data.userInfo,
+    );
   }
 
   @Post('login/apple')
   async appleLogin(@Body() data: AppleAuthDto) {
-    return await this.userAuthService.appleLogin(data.identityToken, data.userInfo);
+    return await this.userAuthService.appleLogin(
+      data.identityToken,
+      data.userInfo,
+    );
   }
 
   @Post('signup/apple')
   async appleSignup(@Body() data: AppleAuthDto) {
-    return await this.userAuthService.appleSignup(data.identityToken, data.userInfo);
+    return await this.userAuthService.appleSignup(
+      data.identityToken,
+      data.userInfo,
+    );
   }
 
   @Post('forgot-password')
   async forgotPassword(@Body() data: forgotPasswordDto) {
     return await this.userAuthService.forgotPassword(data.identifier);
+  }
+
+  @Post('resend-verification')
+  async resendVerification(@Body() body: { identifier: string }) {
+    return await this.userAuthService.resendVerification(body.identifier);
   }
 
   @Post('verify-otp')
@@ -92,7 +105,6 @@ export class UserAuthController {
 
   @Post('logout')
   async logout() {
-
     return {
       success: true,
       message: 'Logged out successfully',
@@ -158,18 +170,10 @@ export class UserAuthController {
     return await this.userAuthService.getAll(role);
   }
 
-
-
-
-
-
-
   @UseGuards(AuthGuardWithRoles)
   @Roles(Role.Admin)
   @Post('create-employee')
   async createEmployee(@Body() data: UserAuthDto) {
-
-
     const newEmployee = await this.userAuthService.createEmployee(data);
     return newEmployee;
   }

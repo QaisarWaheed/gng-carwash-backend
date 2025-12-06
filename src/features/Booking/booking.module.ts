@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BookingController } from './controllers/bookingcontroller/bookingcontroller.controller';
 import { BookingServiceService } from './booking-service/booking-service.service';
+import { BookingReminderService } from './booking-service/booking-reminder.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Booking, bookingSchema } from './entities/Booking.entity';
 import employeeSchema from '../user/employee/entities/employee.entity';
@@ -9,20 +10,19 @@ import { UserAuthModule } from '../user/userAuth/userAuth.module';
 import adminServiceSchema from '../Admin/ServicesModule/entities/Services.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 
-
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Booking.name, schema: bookingSchema }, 
-      { name: 'UserAuth', schema: userAuthSchema }, 
+      { name: Booking.name, schema: bookingSchema },
+      { name: 'UserAuth', schema: userAuthSchema },
       { name: 'Employee', schema: employeeSchema },
-      { name: 'AdminService', schema: adminServiceSchema }
+      { name: 'AdminService', schema: adminServiceSchema },
     ]),
     UserAuthModule,
-    NotificationsModule
+    NotificationsModule,
   ],
   controllers: [BookingController],
-  providers: [BookingServiceService],
-  exports: [BookingServiceService]
+  providers: [BookingServiceService, BookingReminderService],
+  exports: [BookingServiceService],
 })
-export class BookingModule { }
+export class BookingModule {}

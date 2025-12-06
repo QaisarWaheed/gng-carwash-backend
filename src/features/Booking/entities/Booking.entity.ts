@@ -3,7 +3,6 @@ import mongoose, { Document, Types } from 'mongoose';
 
 export type BookingDocument = Booking & Document;
 
-
 @Schema({ timestamps: true })
 export class Booking {
   declare _id: mongoose.Types.ObjectId;
@@ -87,6 +86,12 @@ export class Booking {
 
   @Prop({ type: String, enum: ['sedan', 'suv', 'coupe', 'hatchback', 'truck'] })
   vehicleSubType?: 'sedan' | 'suv' | 'coupe' | 'hatchback' | 'truck';
+
+  @Prop({ default: false })
+  reminderNotified?: boolean;
+
+  @Prop()
+  reminderSentAt?: Date;
 
   @Prop({ type: [Types.ObjectId], ref: 'AdminService' })
   services?: Types.ObjectId[];

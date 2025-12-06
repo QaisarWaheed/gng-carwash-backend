@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -41,7 +40,9 @@ export class GoogleMapsService {
 
   async geocodeAddress(address: string): Promise<GeocodeResult> {
     if (!this.apiKey) {
-      this.logger.warn('Google Maps API key not configured. Skipping geocoding.');
+      this.logger.warn(
+        'Google Maps API key not configured. Skipping geocoding.',
+      );
       throw new Error('Google Maps API key not configured');
     }
 
@@ -60,7 +61,9 @@ export class GoogleMapsService {
         };
       }
 
-      this.logger.error(`Geocoding failed: ${data.status} - ${data.error_message || 'Unknown error'}`);
+      this.logger.error(
+        `Geocoding failed: ${data.status} - ${data.error_message || 'Unknown error'}`,
+      );
       throw new Error(`Unable to geocode address: ${data.status}`);
     } catch (error) {
       this.logger.error('Geocoding error:', error);
@@ -68,10 +71,14 @@ export class GoogleMapsService {
     }
   }
 
-
-  async reverseGeocode(lat: number, lng: number): Promise<ReverseGeocodeResult> {
+  async reverseGeocode(
+    lat: number,
+    lng: number,
+  ): Promise<ReverseGeocodeResult> {
     if (!this.apiKey) {
-      this.logger.warn('Google Maps API key not configured. Skipping reverse geocoding.');
+      this.logger.warn(
+        'Google Maps API key not configured. Skipping reverse geocoding.',
+      );
       throw new Error('Google Maps API key not configured');
     }
 
@@ -113,7 +120,6 @@ export class GoogleMapsService {
     }
   }
 
-
   calculateDistance(
     lat1: number,
     lon1: number,
@@ -137,11 +143,9 @@ export class GoogleMapsService {
     return distance;
   }
 
-
   private toRad(degrees: number): number {
     return degrees * (Math.PI / 180);
   }
-
 
   async isWithinServiceArea(lat: number, lng: number): Promise<boolean> {
     const distance = this.calculateDistance(
@@ -161,7 +165,6 @@ export class GoogleMapsService {
 
     return isWithin;
   }
-
 
   getServiceAreaInfo() {
     return {

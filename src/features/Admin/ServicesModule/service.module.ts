@@ -6,11 +6,13 @@ import adminServiceSchema from './entities/Services.entity';
 import { CloudinaryModule } from 'src/features/cloudinary/cloudinary.module';
 
 @Module({
-  imports:[
-    MongooseModule.forFeature([{name:'AdminService', schema:adminServiceSchema}]),
+  imports: [
+    MongooseModule.forFeature([
+      { name: 'AdminService', schema: adminServiceSchema },
+    ]),
     CloudinaryModule,
   ],
   controllers: [ServiceController],
-  providers: [ServiceService]
+  providers: [ServiceService],
 })
 export class ServiceModule {}

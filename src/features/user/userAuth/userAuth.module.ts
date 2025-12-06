@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-
 import { MongooseModule } from '@nestjs/mongoose';
 import userAuthSchema, { UserAuth } from './entities/userAuth.entity';
 import { UserAuthService } from './services/userAuth.service';
@@ -26,12 +24,21 @@ import { AppleVerificationService } from './services/apple-verification.service'
       signOptions: { expiresIn: '3600s' },
     }),
     MongooseModule.forFeature([
-      { name: UserAuth.name, schema: userAuthSchema }, { name: Employee.name, schema: employeeSchema }, {name:UserAddress.name, schema:UserAddressSchema}
+      { name: UserAuth.name, schema: userAuthSchema },
+      { name: Employee.name, schema: employeeSchema },
+      { name: UserAddress.name, schema: UserAddressSchema },
     ]),
     EmailModule,
   ],
   controllers: [UserAuthController],
-  providers: [UserAuthService, JwtStrategy, GoogleStrategy, ConfigService, GoogleVerificationService, AppleVerificationService],
+  providers: [
+    UserAuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    ConfigService,
+    GoogleVerificationService,
+    AppleVerificationService,
+  ],
   exports: [JwtStrategy, UserAuthService],
 })
-export class UserAuthModule { }
+export class UserAuthModule {}

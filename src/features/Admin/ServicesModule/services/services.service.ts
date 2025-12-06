@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AdminService } from '../entities/Services.entity';
@@ -9,42 +8,46 @@ import { CloudinaryService } from 'src/features/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ServiceService {
-
   constructor(
-    @InjectModel('AdminService') private readonly adminServiceModel: Model<AdminService>,
+    @InjectModel('AdminService')
+    private readonly adminServiceModel: Model<AdminService>,
     private readonly cloudinaryService: CloudinaryService,
-  ) { }
-
+  ) {}
 
   async addNewService(data: CreateServiceDto): Promise<AdminService> {
-    const newService = await this.adminServiceModel.create(data)
-    return newService
+    const newService = await this.adminServiceModel.create(data);
+    return newService;
   }
 
-
   async getAllServices(): Promise<AdminService[] | null> {
-    return await this.adminServiceModel.find()
+    return await this.adminServiceModel.find();
   }
 
   async getServiceById(id: string): Promise<AdminService | null> {
-    return await this.adminServiceModel.findById(id)
+    return await this.adminServiceModel.findById(id);
   }
 
-  async updateService(id: string, data: UpdateServiceDto): Promise<AdminService | { message: string }> {
-    const updatedService = await this.adminServiceModel.findByIdAndUpdate(id, data, { new: true })
+  async updateService(
+    id: string,
+    data: UpdateServiceDto,
+  ): Promise<AdminService | { message: string }> {
+    const updatedService = await this.adminServiceModel.findByIdAndUpdate(
+      id,
+      data,
+      { new: true },
+    );
     if (!updatedService) {
-      return { message: "no service Found to Update" }
+      return { message: 'no service Found to Update' };
     }
-    return updatedService
+    return updatedService;
   }
 
   async deleteService(id: string): Promise<{ message: string }> {
-    const deletedService = await this.adminServiceModel.findByIdAndDelete(id)
+    const deletedService = await this.adminServiceModel.findByIdAndDelete(id);
     if (!deletedService) {
-      return { message: "No Service found" }
+      return { message: 'No Service found' };
     }
-    return { message: "service deleted!!!!" }
-
+    return { message: 'service deleted!!!!' };
   }
 
   async uploadServiceImage(id: string, file: any): Promise<AdminService> {
@@ -59,8 +62,7 @@ export class ServiceService {
     // Update service with image URL
     service.imageUrl = result.secure_url;
     service.cloudinaryPublicId = result.public_id;
-    
+
     return service.save();
   }
-
 }

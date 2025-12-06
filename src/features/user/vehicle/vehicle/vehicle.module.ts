@@ -6,11 +6,11 @@ import { VehicleController } from './controllers/vehicle.controller';
 import { CloudinaryModule } from 'src/features/cloudinary/cloudinary.module';
 
 @Module({
-    imports: [
-        MongooseModule.forFeature([{ name: Vehicle.name, schema: vehicleSchema }]),
-        CloudinaryModule,
-    ],
-    providers: [VehicleService],
-    controllers: [VehicleController]
+  imports: [
+    MongooseModule.forFeature([{ name: Vehicle.name, schema: vehicleSchema }]),
+    CloudinaryModule,
+  ],
+  providers: [VehicleService],
+  controllers: [VehicleController],
 })
-export class VehicleModule { }
+export class VehicleModule {}

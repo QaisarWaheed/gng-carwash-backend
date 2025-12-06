@@ -16,7 +16,11 @@ export class EmailService {
     });
   }
 
-  async sendOtpEmail(email: string, otp: string, purpose: string): Promise<void> {
+  async sendOtpEmail(
+    email: string,
+    otp: string,
+    purpose: string,
+  ): Promise<void> {
     try {
       const subject = this.getEmailSubject(purpose);
       const htmlContent = this.getEmailTemplate(otp, purpose);
@@ -33,7 +37,10 @@ export class EmailService {
     }
   }
 
-  async sendPasswordResetEmail(email: string, resetLink: string): Promise<void> {
+  async sendPasswordResetEmail(
+    email: string,
+    resetLink: string,
+  ): Promise<void> {
     try {
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -60,7 +67,10 @@ export class EmailService {
     }
   }
 
-  async sendVerificationEmail(email: string, verificationLink: string): Promise<void> {
+  async sendVerificationEmail(
+    email: string,
+    verificationLink: string,
+  ): Promise<void> {
     try {
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

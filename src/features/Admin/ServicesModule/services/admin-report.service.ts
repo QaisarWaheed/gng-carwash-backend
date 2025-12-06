@@ -2,19 +2,20 @@ import { Injectable } from '@nestjs/common';
 import PDFDocument from 'pdfkit';
 import { BookingServiceService } from 'src/features/Booking/booking-service/booking-service.service';
 
-
 @Injectable()
 export class AdminReportService {
   constructor(private readonly bookingService: BookingServiceService) {}
 
   async generateReportPDF(startDate: string, endDate: string): Promise<Buffer> {
     // Fetch bookings in date range
-    const bookings = await this.bookingService['bookingModel'].find({
-      date: {
-        $gte: new Date(startDate),
-        $lte: new Date(endDate)
-      }
-    }).lean();
+    const bookings = await this.bookingService['bookingModel']
+      .find({
+        date: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate),
+        },
+      })
+      .lean();
 
     const doc = new PDFDocument();
     const buffers: Buffer[] = [];
@@ -29,9 +30,11 @@ export class AdminReportService {
     doc.moveDown();
 
     bookings.forEach((booking, idx) => {
-      doc.fontSize(12).text(
-        `${idx + 1}. Date: ${booking.date?.toISOString().slice(0,10)} | Status: ${booking.status} | Time Slot: ${booking.timeSlot}`
-      );
+      doc
+        .fontSize(12)
+        .text(
+          `${idx + 1}. Date: ${booking.date?.toISOString().slice(0, 10)} | Status: ${booking.status} | Time Slot: ${booking.timeSlot}`,
+        );
     });
 
     doc.end();

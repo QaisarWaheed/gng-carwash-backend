@@ -1,62 +1,60 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import mongoose, { Types } from "mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import mongoose, { Types } from 'mongoose';
 
-
-export type VehicleType = 'car' | 'bike' | 'jetski' | 'buggy' | 'caravan' | 'mpv' | 'other';
+export type VehicleType =
+  | 'car'
+  | 'bike'
+  | 'jetski'
+  | 'buggy'
+  | 'caravan'
+  | 'mpv'
+  | 'other';
 
 export type VehicleSubType = 'sedan' | 'suv' | 'coupe' | 'hatchback' | 'truck';
 
-
 @Schema({ timestamps: true })
 export class Vehicle {
-    declare _id: mongoose.Types.ObjectId
+  declare _id: mongoose.Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'UserAuth' })
+  customerId: Types.ObjectId;
 
-    @Prop({ type: Types.ObjectId, ref: "UserAuth" })
-    customerId: Types.ObjectId
+  @Prop()
+  model: string;
 
-    @Prop()
-    model: string
+  @Prop()
+  type: VehicleType;
 
-    @Prop()
-    type: VehicleType;
+  @Prop()
+  subType?: VehicleSubType;
 
-    @Prop()
-    subType?: VehicleSubType;
+  @Prop()
+  make: string;
 
-    @Prop()
-    make: string;
+  @Prop()
+  year: number;
 
+  @Prop()
+  plateNumber: string;
 
-    @Prop()
-    year: number
+  @Prop()
+  plateCode: string;
 
-    @Prop()
-    plateNumber: string
+  @Prop()
+  color: string;
 
-    @Prop()
-    plateCode: string;
+  @Prop()
+  city: string;
 
+  @Prop()
+  photo?: string;
 
-    @Prop()
-    color: string
+  @Prop()
+  cloudinaryPublicId?: string;
 
-
-
-    @Prop()
-    city: string;
-
-    @Prop()
-    photo?: string;
-
-    @Prop()
-    cloudinaryPublicId?: string;
-
-    @Prop({ default: false })
-    isDefault?: boolean;
-
-
+  @Prop({ default: false })
+  isDefault?: boolean;
 }
 
-const vehicleSchema = SchemaFactory.createForClass(Vehicle)
-export default vehicleSchema
+const vehicleSchema = SchemaFactory.createForClass(Vehicle);
+export default vehicleSchema;

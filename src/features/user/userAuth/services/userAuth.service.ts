@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable prettier/prettier */
+
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
+  HttpException,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Roles, UserAuth } from '../entities/userAuth.entity';
+import { Role } from 'src/types/enum.class';
 import { Connection, Model, Types } from 'mongoose';
 import { UserAuthDto } from '../dtos/userAuth.dto';
 import * as bcrypt from 'bcrypt';
@@ -21,7 +22,6 @@ import { EmailService } from '../../../email/email.service';
 import { OtpService } from '../../../email/otp.service';
 import { GoogleVerificationService } from './google-verification.service';
 import { AppleVerificationService } from './apple-verification.service';
-
 
 @Injectable()
 export class UserAuthService {
@@ -36,33 +36,22 @@ export class UserAuthService {
     private readonly otpService: OtpService,
     private readonly googleVerificationService: GoogleVerificationService,
     private readonly appleVerificationService: AppleVerificationService,
-  ) { }
-
-
+  ) {}
 
   async getById(id: string): Promise<UserAuth | Employee> {
-    let user = await this.userAuthModel.findById(id);
+    const user = await this.userAuthModel.findById(id);
 
     if (!user) {
-      throw new NotFoundException("no user or employee found");
+      throw new NotFoundException('no user or employee found');
     }
     return user;
   }
 
-
-
   async signup(data: UserAuthDto): Promise<{ message: string; email: string }> {
-
     const { email, phoneNumber } = data;
     const existingUser = await this.userAuthModel.findOne({
       $or: [{ email }, { phoneNumber }],
     });
-
-
-
-
-
-
 
     if (existingUser) {
       const emailTaken = existingUser.email === email;
@@ -81,36 +70,30 @@ export class UserAuthService {
       }
     }
 
-
     const saltOrRounds = 12;
     const hashedPassword = await bcrypt.hash(data.password, saltOrRounds);
     data.password = hashedPassword;
 
-    // Create user with unverified status
     const newUser = await this.userAuthModel.create({
       ...data,
       isVerified: false,
     });
 
-    // Generate and send OTP
     try {
       const otp = await this.otpService.generateOtp(email, 'signup');
       await this.emailService.sendOtpEmail(email, otp, 'signup');
     } catch (error) {
-      // Delete user if email sending fails
       await this.userAuthModel.deleteOne({ _id: newUser._id });
-      throw new BadRequestException('Failed to send verification email. Please try again.');
+      throw new BadRequestException(
+        'Failed to send verification email. Please try again.',
+      );
     }
 
     return {
       message: 'User registered successfully. OTP sent to your email.',
       email: email,
     };
-
   }
-
-
-
 
   async validateUser(identifier: string, password: string): Promise<any> {
     const query = identifier.includes('@')
@@ -138,15 +121,29 @@ export class UserAuthService {
       throw new UnauthorizedException('Invalid Credentials');
     }
 
+    if (user.role === 'User' && !user.isVerified) {
+      throw new HttpException(
+        {
+          code: 'EMAIL_NOT_VERIFIED',
+          message: 'Please verify your email before logging in',
+        },
+        401,
+      );
+    }
+
     const payload = {
       sub: user._id,
       email: user.email,
       role: user.role,
+      isVerified: !!user.isVerified,
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+      secret:
+        this.configService.get<string>('JWT_SECRET') ||
+        'a-string-secret-at-least-256-bits-long',
     });
+
     return {
       success: true,
       message: 'Login successful',
@@ -160,7 +157,6 @@ export class UserAuthService {
       },
     };
   }
-
   async forgotPassword(identifier: string) {
     if (!identifier)
       throw new BadRequestException('Email or phone number required');
@@ -196,25 +192,90 @@ export class UserAuthService {
       throw new NotFoundException(`${identifier} not found`);
     }
 
-    if (!user.otp || !user.otpExpiresAt) {
-      throw new BadRequestException('No OTP request found for this user');
+ 
+    if (user.otp && user.otpExpiresAt) {
+      if (new Date() > user.otpExpiresAt) {
+        throw new BadRequestException('OTP has expired. Please request a new one.');
+      }
+
+      if (user.otp !== otp) {
+        throw new BadRequestException('Invalid OTP. Please try again.');
+      }
+
+      user.otp = undefined;
+      user.otpExpiresAt = undefined;
+      await user.save();
+
+      return { success: true, message: 'OTP verified successfully' };
     }
 
-    if (new Date() > user.otpExpiresAt) {
+ 
+    try {
+      const verified = await this.otpService.verifyOtp(identifier, otp, 'signup');
+      if (verified) {
+        user.isVerified = true;
+        await user.save();
+        const payload = { sub: user._id, email: user.email, role: user.role, isVerified: !!user.isVerified };
+        const token = await this.jwtService.signAsync(payload, {
+          secret:
+            this.configService.get<string>('JWT_SECRET') ||
+            'a-string-secret-at-least-256-bits-long',
+        });
+
+        return {
+          success: true,
+          message: 'OTP verified successfully',
+          token,
+          user: {
+            id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            isVerified: user.isVerified,
+          },
+        };
+      }
+
+      throw new BadRequestException('Invalid OTP. Please try again.');
+    } catch (err) {
+      if (err instanceof BadRequestException || err instanceof NotFoundException) {
+        throw err;
+      }
+      throw new BadRequestException(err?.message || 'OTP verification failed');
+    }
+  }
+
+  async resendVerification(identifier: string) {
+    if (!identifier) {
+      throw new BadRequestException('Identifier (email) is required');
+    }
+
+   
+    if (!identifier.includes('@')) {
       throw new BadRequestException(
-        'OTP has expired. Please request a new one.',
+        'Resend verification is only supported via email at the moment',
       );
     }
 
-    if (user.otp !== otp) {
-      throw new BadRequestException('Invalid OTP. Please try again.');
+    const user = await this.userAuthModel.findOne({ email: identifier });
+    if (!user) {
+      throw new NotFoundException(`${identifier} not found`);
     }
 
-    user.otp = undefined;
-    user.otpExpiresAt = undefined;
-    await user.save();
+    if (user.isVerified) {
+      return { success: true, message: 'Email already verified' };
+    }
 
-    return { success: true, message: 'OTP verified successfully' };
+    try {
+      const otp = await this.otpService.generateOtp(user.email, 'signup');
+      await this.emailService.sendOtpEmail(user.email, otp, 'signup');
+      return { success: true, message: 'Verification OTP resent successfully' };
+    } catch (error: any) {
+      throw new BadRequestException(
+        'Failed to resend verification OTP. Please try again later.',
+      );
+    }
   }
 
   async changePassword(identifier: string, newPassword: string) {
@@ -238,7 +299,7 @@ export class UserAuthService {
     return { success: true, message: 'Password changed successfully!' };
   }
 
-  //Employee and Manager
+
 
   async getAllUsers() {
     return await this.userAuthModel.find();
@@ -249,46 +310,34 @@ export class UserAuthService {
   }
 
   async createEmployee(dto: UserAuthDto): Promise<Employee | null> {
-
-
     try {
-
       const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-      const user = await this.userAuthModel.create(
-        [
-          {
-            name: dto.fullName,
-            email: dto.email,
-            phone: dto.phoneNumber,
-            password: hashedPassword,
-            role: 'Employee',
-          },
-        ],
+      const user = await this.userAuthModel.create([
+        {
+          name: dto.fullName,
+          email: dto.email,
+          phone: dto.phoneNumber,
+          password: hashedPassword,
+          role: 'Employee',
+        },
+      ]);
 
-      );
-
-      const employee = await this.employeeModel.create(
-        [
-          {
-            userId: user[0]._id,
-            status: 'active',
-            assignedBookings: [],
-            averageRating: 0,
-            completedJobs: 0,
-            flags: [],
-          },
-        ],
-
-      );
-
-
+      const employee = await this.employeeModel.create([
+        {
+          userId: user[0]._id,
+          status: 'active',
+          assignedBookings: [],
+          averageRating: 0,
+          completedJobs: 0,
+          flags: [],
+        },
+      ]);
 
       return this.employeeModel
         .findById(employee[0]._id)
         .populate('userId', 'name email role phone');
     } catch (error) {
-
       throw new BadRequestException(error.message);
     }
   }
@@ -309,7 +358,7 @@ export class UserAuthService {
     const saltOrRounds = 12;
     const hashedPassword = await bcrypt.hash(data.password, saltOrRounds);
     data.password = hashedPassword;
-    data.role = 'Manager';
+    data.role = Role.Manager;
 
     const newUser = this.userAuthModel.create(data);
 
@@ -337,15 +386,19 @@ export class UserAuthService {
   }
 
   async getUserProfile(userId: string): Promise<UserAuth> {
-    const user = await this.userAuthModel.findById(userId).select('-password -otp -otpExpiresAt');
+    const user = await this.userAuthModel
+      .findById(userId)
+      .select('-password -otp -otpExpiresAt');
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
   }
 
-  async updateUserProfile(userId: string, updateData: Partial<UserAuthDto>): Promise<UserAuth> {
-
+  async updateUserProfile(
+    userId: string,
+    updateData: Partial<UserAuthDto>,
+  ): Promise<UserAuth> {
     const { password, role, ...safeUpdateData } = updateData as any;
 
     const updatedUser = await this.userAuthModel
@@ -359,27 +412,42 @@ export class UserAuthService {
     return updatedUser;
   }
 
-  async resetPassword(userId: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  async resetPassword(
+    userId: string,
+    newPassword: string,
+  ): Promise<{ success: boolean; message: string }> {
     const user = await this.userAuthModel.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.userAuthModel.updateOne({ _id: userId }, { password: hashedPassword });
+    await this.userAuthModel.updateOne(
+      { _id: userId },
+      { password: hashedPassword },
+    );
 
     return { success: true, message: 'Password reset successfully' };
   }
 
-  async refreshToken(userId: string, email: string, role: Roles): Promise<{ token: string }> {
+  async refreshToken(
+    userId: string,
+    email: string,
+    role: Roles,
+  ): Promise<{ token: string }> {
+   
+    const dbUser = await this.userAuthModel.findById(userId).select('isVerified');
     const payload = {
       sub: userId,
       email: email,
       role: role,
+      isVerified: !!dbUser?.isVerified,
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+      secret:
+        this.configService.get<string>('JWT_SECRET') ||
+        'a-string-secret-at-least-256-bits-long',
     });
 
     return { token };
@@ -387,14 +455,27 @@ export class UserAuthService {
 
   async googleLogin(googleToken: string, userInfo: any) {
     try {
-      // Verify the Google token
-      const verifiedUserInfo = await this.googleVerificationService.verifyGoogleToken(googleToken);
+      
+      const verifiedUserInfo =
+        await this.googleVerificationService.verifyGoogleToken(googleToken);
       const { email, name, picture, sub } = userInfo || verifiedUserInfo;
 
-      let user = await this.userAuthModel.findOne({ email });
+      const user = await this.userAuthModel.findOne({ email });
 
       if (!user) {
-        throw new NotFoundException('No account found with this email. Please sign up first.');
+        throw new NotFoundException(
+          'No account found with this email. Please sign up first.',
+        );
+      }
+
+      if (user.role === 'User' && !user.isVerified) {
+        throw new HttpException(
+          {
+            code: 'EMAIL_NOT_VERIFIED',
+            message: 'Please verify your email before logging in',
+          },
+          401,
+        );
       }
 
       if (!user.googleId) {
@@ -407,10 +488,13 @@ export class UserAuthService {
         sub: user._id,
         email: user.email,
         role: user.role,
+        isVerified: !!user.isVerified,
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+        secret:
+          this.configService.get<string>('JWT_SECRET') ||
+          'a-string-secret-at-least-256-bits-long',
       });
 
       return {
@@ -432,17 +516,22 @@ export class UserAuthService {
 
   async googleSignup(googleToken: string, userInfo: any) {
     try {
-      // Verify the Google token
-      const verifiedUserInfo = await this.googleVerificationService.verifyGoogleToken(googleToken);
+    
+      const verifiedUserInfo =
+        await this.googleVerificationService.verifyGoogleToken(googleToken);
       const { email, name, picture, sub } = userInfo || verifiedUserInfo;
 
       const existingUser = await this.userAuthModel.findOne({ email });
 
       if (existingUser) {
-        throw new BadRequestException('An account with this email already exists. Please login instead.');
+        throw new BadRequestException(
+          'An account with this email already exists. Please login instead.',
+        );
       }
 
-      const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      const randomPassword =
+        Math.random().toString(36).slice(-8) +
+        Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(randomPassword, 12);
 
       const newUser = await this.userAuthModel.create({
@@ -459,10 +548,13 @@ export class UserAuthService {
         sub: newUser._id,
         email: newUser.email,
         role: newUser.role,
+        isVerified: !!newUser.isVerified,
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+        secret:
+          this.configService.get<string>('JWT_SECRET') ||
+          'a-string-secret-at-least-256-bits-long',
       });
 
       return {
@@ -484,14 +576,28 @@ export class UserAuthService {
 
   async appleLogin(identityToken: string, userInfo: any) {
     try {
-      // Verify the Apple token
-      const verifiedUserInfo = await this.appleVerificationService.verifyAppleToken(identityToken);
+    
+      const verifiedUserInfo =
+        await this.appleVerificationService.verifyAppleToken(identityToken);
       const { email, sub } = userInfo || verifiedUserInfo;
 
-      let user = await this.userAuthModel.findOne({ email });
+      const user = await this.userAuthModel.findOne({ email });
 
       if (!user) {
-        throw new NotFoundException('No account found with this email. Please sign up first.');
+        throw new NotFoundException(
+          'No account found with this email. Please sign up first.',
+        );
+      }
+
+    
+      if (user.role === 'User' && !user.isVerified) {
+        throw new HttpException(
+          {
+            code: 'EMAIL_NOT_VERIFIED',
+            message: 'Please verify your email before logging in',
+          },
+          401,
+        );
       }
 
       if (!user.appleId) {
@@ -503,10 +609,13 @@ export class UserAuthService {
         sub: user._id,
         email: user.email,
         role: user.role,
+        isVerified: !!user.isVerified,
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+        secret:
+          this.configService.get<string>('JWT_SECRET') ||
+          'a-string-secret-at-least-256-bits-long',
       });
 
       return {
@@ -528,8 +637,9 @@ export class UserAuthService {
 
   async appleSignup(identityToken: string, userInfo: any) {
     try {
-      // Verify the Apple token
-      const verifiedUserInfo = await this.appleVerificationService.verifyAppleToken(identityToken);
+  
+      const verifiedUserInfo =
+        await this.appleVerificationService.verifyAppleToken(identityToken);
       const { email, sub, name } = userInfo || verifiedUserInfo;
 
       if (!email) {
@@ -539,13 +649,17 @@ export class UserAuthService {
       const existingUser = await this.userAuthModel.findOne({ email });
 
       if (existingUser) {
-        throw new BadRequestException('An account with this email already exists. Please login instead.');
+        throw new BadRequestException(
+          'An account with this email already exists. Please login instead.',
+        );
       }
 
-      const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+      const randomPassword =
+        Math.random().toString(36).slice(-8) +
+        Math.random().toString(36).slice(-8);
       const hashedPassword = await bcrypt.hash(randomPassword, 12);
 
-      // Extract full name from userInfo or Apple token
+     
       let fullName = 'Apple User';
       if (name) {
         if (typeof name === 'string') {
@@ -570,10 +684,13 @@ export class UserAuthService {
         sub: newUser._id,
         email: newUser.email,
         role: newUser.role,
+        isVerified: !!newUser.isVerified,
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
+        secret:
+          this.configService.get<string>('JWT_SECRET') ||
+          'a-string-secret-at-least-256-bits-long',
       });
 
       return {

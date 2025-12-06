@@ -15,12 +15,10 @@ export class IsValidBookingDate implements ValidatorConstraintInterface {
     const bookingDate = getDubaiDayStart(new Date(value));
     const today = getDubaiDayStart(getDubaiNow());
 
-    
     if (bookingDate < today) {
       return false;
     }
 
-   
     const maxDate = new Date(today);
     maxDate.setDate(maxDate.getDate() + 7);
 

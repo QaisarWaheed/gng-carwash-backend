@@ -1,17 +1,22 @@
-/* eslint-disable prettier/prettier */
-import { IsMongoId, IsNotEmpty, IsOptional, IsString, IsBoolean } from 'class-validator';
+import {
+  IsMongoId,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsBoolean,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateFlagDto {
-    @IsMongoId()
-    @IsNotEmpty()
-    bookingId: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  bookingId: string;
 
-    @IsString()
-    @IsNotEmpty()
-    reason: string;
+  @IsString()
+  @IsNotEmpty()
+  reason: string;
 
-    @IsMongoId()
-    @IsNotEmpty()
-    issuedBy: string;
+  @IsMongoId()
+  @IsNotEmpty()
+  issuedBy: string;
 }

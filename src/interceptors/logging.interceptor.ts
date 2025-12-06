@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
@@ -30,15 +29,13 @@ export class LoggingInterceptor implements NestInterceptor {
           const { statusCode } = response;
           const duration = Date.now() - startTime;
 
-      
           this.logger.log(
             `${method} ${url} ${statusCode} - ${duration}ms - ${ip} - User: ${user?.email || 'Anonymous'} - ${userAgent}`,
           );
         },
         error: (error) => {
           const duration = Date.now() - startTime;
-          
-        
+
           this.logger.error(
             `${method} ${url} ${error.status || 500} - ${duration}ms - ${ip} - User: ${user?.email || 'Anonymous'} - Error: ${error.message}`,
           );

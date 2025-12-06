@@ -1,133 +1,257 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { CreateVehicleDto } from '../dtos/createVehicleDto';
 import { Vehicle } from '../entities/vehicle.entity';
 import { CloudinaryService } from 'src/features/cloudinary/cloudinary.service';
+export interface UploadPhotoResponse {
+  photoUrl: string;
+  vehicle: any;
+}
 
 @Injectable()
 export class VehicleService {
-    constructor(
-        @InjectModel(Vehicle.name)
-        private readonly vehicleModel: Model<Vehicle>,
-        private readonly cloudinaryService: CloudinaryService,
-    ) { }
+  constructor(
+    @InjectModel(Vehicle.name)
+    private readonly vehicleModel: Model<Vehicle>,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
-    async createVehicle(dto: CreateVehicleDto) {
-        try {
-            console.log('VehicleService.createVehicle - dto:', JSON.stringify(dto));
-            
-            if (!dto.customerId) {
-                console.error('customerId is missing in dto');
-                throw new BadRequestException('Customer ID is required');
-            }
+  async createVehicle(dto: CreateVehicleDto) {
+    try {
+      console.log('VehicleService.createVehicle - dto:', JSON.stringify(dto));
 
-            // Check if plate number already exists for this customer
-            const exists = await this.vehicleModel.findOne({ 
-                plateNumber: dto.plateNumber,
-                plateCode: dto.plateCode 
-            });
-            
-            if (exists) {
-                console.log('Vehicle with plate number already exists:', dto.plateCode, dto.plateNumber);
-                // Check if it belongs to the same customer
-                if (exists.customerId.toString() === dto.customerId) {
-                    throw new BadRequestException('You have already registered a vehicle with this plate number');
-                } else {
-                    throw new BadRequestException('This plate number is already registered in the system');
-                }
-            }
+      if (!dto.customerId) {
+        console.error('customerId is missing in dto');
+        throw new BadRequestException('Customer ID is required');
+      }
 
-            const vehicleData = {
-                ...dto,
-                customerId: new Types.ObjectId(dto.customerId),
-            };
-            console.log('Creating vehicle with data:', JSON.stringify(vehicleData));
+      // Check if plate number already exists for this customer
+      const exists = await this.vehicleModel.findOne({
+        plateNumber: dto.plateNumber,
+        plateCode: dto.plateCode,
+      });
 
-            const vehicle = await this.vehicleModel.create(vehicleData);
-            console.log('Vehicle created in DB with _id:', vehicle._id);
-
-            const vehicleObj = vehicle.toObject();
-            return { message: 'Vehicle created successfully', vehicle: { ...vehicleObj, id: vehicleObj._id.toString() } };
-        } catch (error) {
-            console.error('Error in VehicleService.createVehicle:', error.message, error.stack);
-            if (error instanceof BadRequestException) {
-                throw error;
-            }
-            throw new BadRequestException(error.message || 'Failed to create vehicle');
+      if (exists) {
+        console.log(
+          'Vehicle with plate number already exists:',
+          dto.plateCode,
+          dto.plateNumber,
+        );
+        if (exists.customerId.toString() === dto.customerId) {
+          throw new BadRequestException(
+            'You have already registered a vehicle with this plate number',
+          );
+        } else {
+          throw new BadRequestException(
+            'This plate number is already registered in the system',
+          );
         }
+      }
+
+      const vehicleData = {
+        ...dto,
+        customerId: new Types.ObjectId(dto.customerId),
+      };
+      console.log('Creating vehicle with data:', JSON.stringify(vehicleData));
+
+      const vehicle = await this.vehicleModel.create(vehicleData);
+      console.log('Vehicle created in DB with _id:', vehicle._id);
+
+      const vehicleObj = vehicle.toObject();
+      return {
+        message: 'Vehicle created successfully',
+        vehicle: { ...vehicleObj, id: vehicleObj._id.toString() },
+      };
+    } catch (error: any) {
+      console.error(
+        'Error in VehicleService.createVehicle:',
+        typeof error === 'object' && error !== null && 'message' in error
+          ? (error as { message: string }).message
+          : error,
+        typeof error === 'object' && error !== null && 'stack' in error
+          ? (error as { stack?: string }).stack
+          : '',
+      );
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(
+        typeof error === 'object' && error !== null && 'message' in error
+          ? (error as { message: string }).message
+          : 'Failed to create vehicle',
+      );
     }
-    async getAllVehicles() {
-        const vehicles = await this.vehicleModel.find().populate('customerId', 'fullName email');
-        return vehicles.map(v => {
-            const obj = v.toObject();
-            return { ...obj, id: obj._id.toString() };
-        });
+  }
+  async getAllVehicles() {
+    const vehicles = await this.vehicleModel
+      .find()
+      .populate('customerId', 'fullName email');
+    return vehicles.map((v) => {
+      const obj = v.toObject();
+      return { ...obj, id: obj._id.toString() };
+    });
+  }
+
+  async getVehiclesByUser(userId: string) {
+    const vehicles = await this.vehicleModel.find({
+      customerId: new Types.ObjectId(userId),
+    });
+    return vehicles.map((v) => {
+      const obj = v.toObject();
+      return { ...obj, id: obj._id.toString() };
+    });
+  }
+
+  async getVehicleById(id: string) {
+    const vehicle = await this.vehicleModel
+      .findById(id)
+      .populate('customerId', 'fullName email');
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+    const obj = vehicle.toObject();
+    return { ...obj, id: obj._id.toString() };
+  }
+
+  async updateVehicle(id: string, dto: Partial<CreateVehicleDto>) {
+    const updated = await this.vehicleModel.findByIdAndUpdate(id, dto, {
+      new: true,
+    });
+    if (!updated) throw new NotFoundException('Vehicle not found');
+    const obj = updated.toObject();
+    return {
+      message: 'Vehicle updated successfully',
+      updated: { ...obj, id: obj._id.toString() },
+    };
+  }
+
+  async deleteVehicle(id: string) {
+    const deleted = await this.vehicleModel.findByIdAndDelete(id);
+    if (!deleted) throw new NotFoundException('Vehicle not found');
+    return { message: 'Vehicle deleted successfully' };
+  }
+
+  async setDefaultVehicle(id: string) {
+    const vehicle = await this.vehicleModel.findById(id);
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+    await this.vehicleModel.updateMany(
+      { customerId: vehicle.customerId },
+      { $set: { isDefault: false } },
+    );
+
+    const updated = await this.vehicleModel.findByIdAndUpdate(
+      id,
+      { $set: { isDefault: true } },
+      { new: true },
+    );
+
+    if (!updated) throw new NotFoundException('Vehicle not found');
+    const obj = updated.toObject();
+    return {
+      message: 'Default vehicle set successfully',
+      vehicle: { ...obj, id: obj._id.toString() },
+    };
+  }
+
+  async uploadVehiclePhoto(id: string, file: any) {
+    const vehicle = await this.vehicleModel.findById(id);
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+    const result = await this.cloudinaryService.uploadImage(file, 'vehicles');
+
+    const updated = await this.vehicleModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          photo: result.secure_url,
+          cloudinaryPublicId: result.public_id,
+        },
+      },
+      { new: true },
+    );
+
+    if (!updated) throw new NotFoundException('Vehicle not found');
+    const obj = updated.toObject();
+    return {
+      photoUrl: result.secure_url,
+      vehicle: { ...obj, id: obj._id.toString() },
+    };
+  }
+
+  async uploadVehiclePhotoFromBase64(id: string, base64: string) {
+    const vehicle = await this.vehicleModel.findById(id);
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
+
+    const dataUrl = base64.startsWith('data:')
+      ? base64
+      : `data:image/jpeg;base64,${base64}`;
+
+    const result = await this.cloudinaryService.uploadImageFromBase64(
+      dataUrl,
+      'vehicles',
+    );
+
+    const updated = await this.vehicleModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          photo: result.secure_url,
+          cloudinaryPublicId: result.public_id,
+        },
+      },
+      { new: true },
+    );
+
+    if (!updated) throw new NotFoundException('Vehicle not found');
+    const obj = updated.toObject();
+    return {
+      photoUrl: result.secure_url,
+      vehicle: { ...obj, id: obj._id.toString() },
+    };
+  }
+
+  async uploadVehiclePhotoFromUri(id: string, uri?: string) {
+    if (!uri) throw new BadRequestException('No photo provided');
+
+    if (uri.startsWith('http://') || uri.startsWith('https://')) {
+      const res = await fetch(uri);
+      const buffer = await res.arrayBuffer();
+      const b64 = Buffer.from(buffer).toString('base64');
+      return this.uploadVehiclePhotoFromBase64(id, b64);
     }
+    throw new BadRequestException(
+      'Unsupported photo URI. Send file multipart or base64.',
+    );
+  }
 
-    async getVehiclesByUser(userId: string) {
-        const vehicles = await this.vehicleModel.find({ customerId: new Types.ObjectId(userId) });
-        return vehicles.map(v => {
-            const obj = v.toObject();
-            return { ...obj, id: obj._id.toString() };
-        });
-    }
+  async assignVehiclePhotoFromCloudinary(
+    id: string,
+    publicId: string,
+    url: string,
+  ) {
+    const vehicle = await this.vehicleModel.findById(id);
+    if (!vehicle) throw new NotFoundException('Vehicle not found');
 
-    async getVehicleById(id: string) {
-        const vehicle = await this.vehicleModel.findById(id).populate('customerId', 'fullName email');
-        if (!vehicle) throw new NotFoundException('Vehicle not found');
-        const obj = vehicle.toObject();
-        return { ...obj, id: obj._id.toString() };
-    }
+    const updated = await this.vehicleModel.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          photo: url,
+          cloudinaryPublicId: publicId,
+        },
+      },
+      { new: true },
+    );
 
-    async updateVehicle(id: string, dto: Partial<CreateVehicleDto>) {
-        const updated = await this.vehicleModel.findByIdAndUpdate(id, dto, { new: true });
-        if (!updated) throw new NotFoundException('Vehicle not found');
-        const obj = updated.toObject();
-        return { message: 'Vehicle updated successfully', updated: { ...obj, id: obj._id.toString() } };
-    }
-
-    async deleteVehicle(id: string) {
-        const deleted = await this.vehicleModel.findByIdAndDelete(id);
-        if (!deleted) throw new NotFoundException('Vehicle not found');
-        return { message: 'Vehicle deleted successfully' };
-    }
-
-    async setDefaultVehicle(id: string) {
-        const vehicle = await this.vehicleModel.findById(id);
-        if (!vehicle) throw new NotFoundException('Vehicle not found');
-
-        await this.vehicleModel.updateMany(
-            { customerId: vehicle.customerId },
-            { $set: { isDefault: false } }
-        );
-
-        const updated = await this.vehicleModel.findByIdAndUpdate(
-            id,
-            { $set: { isDefault: true } },
-            { new: true }
-        );
-
-        if (!updated) throw new NotFoundException('Vehicle not found');
-        const obj = updated.toObject();
-        return { message: 'Default vehicle set successfully', vehicle: { ...obj, id: obj._id.toString() } };
-    }
-
-    async uploadVehiclePhoto(id: string, file: any) {
-        const vehicle = await this.vehicleModel.findById(id);
-        if (!vehicle) throw new NotFoundException('Vehicle not found');
-
-        // Upload image to Cloudinary
-        const result = await this.cloudinaryService.uploadImage(file, 'vehicles');
-
-        const updated = await this.vehicleModel.findByIdAndUpdate(
-            id,
-            { $set: { photo: result.secure_url, cloudinaryPublicId: result.public_id } },
-            { new: true }
-        );
-
-        if (!updated) throw new NotFoundException('Vehicle not found');
-        const obj = updated.toObject();
-        return { photoUrl: result.secure_url, vehicle: { ...obj, id: obj._id.toString() } };
-    }
+    if (!updated) throw new NotFoundException('Vehicle not found');
+    const obj = updated.toObject();
+    return {
+      photoUrl: url,
+      vehicle: { ...obj, id: obj._id.toString() },
+    };
+  }
 }

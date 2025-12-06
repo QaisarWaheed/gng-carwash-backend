@@ -1,6 +1,5 @@
-/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary } from 'cloudinary';
 import { UploadApiResponse } from 'cloudinary';
@@ -15,22 +14,26 @@ export class CloudinaryService {
     });
   }
 
-  async uploadImage(
-    file: any,
-    folder: string,
-  ): Promise<UploadApiResponse> {
+  async uploadImage(file: any, folder: string): Promise<UploadApiResponse> {
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+    if (file && file.buffer && file.buffer.length > MAX_FILE_SIZE) {
+      throw new BadRequestException('File size exceeds 10 MB limit');
+    }
     return new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        {
-          folder: folder,
-          resource_type: 'auto',
-        },
-        (error, result) => {
-          if (error) return reject(new Error(error.message));
-          if (!result) return reject(new Error('Upload failed'));
-          resolve(result);
-        },
-      ).end(file.buffer);
+      cloudinary.uploader
+        .upload_stream(
+          {
+            folder: folder,
+            resource_type: 'auto',
+          },
+          (error, result) => {
+            if (error) return reject(new Error(error.message));
+            if (!result) return reject(new Error('Upload failed'));
+            resolve(result);
+          },
+        )
+        .end(file.buffer);
     });
   }
 
@@ -38,6 +41,16 @@ export class CloudinaryService {
     base64String: string,
     folder: string,
   ): Promise<UploadApiResponse> {
+    const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+    const raw = base64String.includes('base64,')
+      ? base64String.split('base64,')[1]
+      : base64String;
+
+    const approxBytes = Math.ceil((raw.length * 3) / 4);
+    if (approxBytes > MAX_FILE_SIZE) {
+      throw new BadRequestException('File size exceeds 10 MB limit');
+    }
     return new Promise((resolve, reject) => {
       void cloudinary.uploader.upload(
         base64String,
@@ -57,7 +70,8 @@ export class CloudinaryService {
   async deleteImage(publicId: string): Promise<any> {
     return new Promise((resolve, reject) => {
       void cloudinary.uploader.destroy(publicId, (error: any, result) => {
-        if (error) return reject(new Error(String(error.message) || 'Delete failed'));
+        if (error)
+          return reject(new Error(String(error.message) || 'Delete failed'));
         resolve(result);
       });
     });
@@ -68,11 +82,10 @@ export class CloudinaryService {
     file: any,
     folder: string,
   ): Promise<UploadApiResponse> {
-    // Delete old image
     if (oldPublicId) {
       await this.deleteImage(oldPublicId);
     }
-    // Upload new image
+
     return this.uploadImage(file, folder);
   }
 }
