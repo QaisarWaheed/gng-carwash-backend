@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Put, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ServiceService } from '../services/services.service';
 import { CreateServiceDto } from '../dtos/CreateServiceDto';
 import { UpdateServiceDto } from '../dtos/UpdateServiceDto';
@@ -74,6 +75,18 @@ export class ServiceController {
         }
         catch (e) {
             throw new HttpException(e.message, HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    @UseGuards(AuthGuardWithRoles)
+    @Roles(Role.Admin)
+    @Post(':id/upload-image')
+    @UseInterceptors(FileInterceptor('image'))
+    async uploadServiceImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+        try {
+            return await this.adminService.uploadServiceImage(id, file);
+        } catch (e) {
+            throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
         }
     }
 

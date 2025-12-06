@@ -5,11 +5,15 @@ import { AdminService } from '../entities/Services.entity';
 import { Model } from 'mongoose';
 import { CreateServiceDto } from '../dtos/CreateServiceDto';
 import { UpdateServiceDto } from '../dtos/UpdateServiceDto';
+import { CloudinaryService } from 'src/features/cloudinary/cloudinary.service';
 
 @Injectable()
 export class ServiceService {
 
-  constructor(@InjectModel('AdminService') private readonly adminServiceModel: Model<AdminService>) { }
+  constructor(
+    @InjectModel('AdminService') private readonly adminServiceModel: Model<AdminService>,
+    private readonly cloudinaryService: CloudinaryService,
+  ) { }
 
 
   async addNewService(data: CreateServiceDto): Promise<AdminService> {
@@ -41,6 +45,22 @@ export class ServiceService {
     }
     return { message: "service deleted!!!!" }
 
+  }
+
+  async uploadServiceImage(id: string, file: any): Promise<AdminService> {
+    const service = await this.adminServiceModel.findById(id);
+    if (!service) {
+      throw new Error('Service not found');
+    }
+
+    // Upload image to Cloudinary
+    const result = await this.cloudinaryService.uploadImage(file, 'services');
+
+    // Update service with image URL
+    service.imageUrl = result.secure_url;
+    service.cloudinaryPublicId = result.public_id;
+    
+    return service.save();
   }
 
 }

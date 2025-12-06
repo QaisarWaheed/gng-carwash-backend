@@ -13,56 +13,42 @@ import { UpdateAddressDto } from '../../dto/update-user-address.dto';
 import { CreateAddressDto } from '../../dto/user-address.dto';
 import { UserAddressService } from './user-address.service';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
+import { Roles } from 'src/decorators/Roles.decorator';
+import { Role } from 'src/types/enum.class';
 
 
 @Controller('addresses')
 @UseGuards(AuthGuardWithRoles)
+@Roles(Role.User)
 export class UserAddressController {
   constructor(private readonly addressService: UserAddressService) {}
 
   @Post()
-  async create(@Req() req, @Body() dto: CreateAddressDto) {
-    console.log('Address create called with dto:', JSON.stringify(dto));
-    console.log('req.user:', req.user ? JSON.stringify({ sub: req.user.sub, email: req.user.email }) : 'undefined');
-    try {
-      const userId = req.user.sub || req.user._id;
-      const result = await this.addressService.create(userId, dto);
-      console.log('Address created successfully:', result);
-      return result.toJSON();
-    } catch (error) {
-      console.error('Error in address controller:', error.message, error.stack);
-      throw error;
-    }
+  create(@Req() req, @Body() dto: CreateAddressDto) {
+    return this.addressService.create(req.user._id, dto);
   }
 
   @Get()
-  async findUserAddresses(@Req() req) {
-    console.log('req.user:', req.user ? JSON.stringify({ sub: req.user.sub, email: req.user.email }) : 'undefined');
-    
-    const userId = req.user.sub || req.user._id;
-    if (!userId) {
-      throw new Error('User not authenticated or user ID not found');
-    }
-    console.log('Fetching addresses for userId:', userId);
-    const addresses = await this.addressService.findUserAddresses(userId);
-    console.log(`Found ${addresses.length} addresses for user ${userId}`);
-    return addresses.map(addr => addr.toJSON());
+  findUserAddresses(@Req() req) {
+    return this.addressService.findUserAddresses(req.user._id);
+  }
+
+  @Get('user/:userId')
+  findAddressesByUserId(@Param('userId') userId: string) {
+    return this.addressService.findUserAddresses(userId);
   }
 
   @Patch(':id')
-  async update(
+  update(
     @Req() req,
     @Param('id') id: string,
     @Body() dto: UpdateAddressDto,
   ) {
-    const userId = req.user.sub || req.user._id;
-    const result = await this.addressService.update(userId, id, dto);
-    return result.toJSON();
+    return this.addressService.update(req.user._id, id, dto);
   }
 
   @Delete(':id')
   remove(@Req() req, @Param('id') id: string) {
-    const userId = req.user.sub || req.user._id;
-    return this.addressService.remove(userId, id);
+    return this.addressService.remove(req.user._id, id);
   }
 }

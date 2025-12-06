@@ -1,19 +1,16 @@
 import { Module } from '@nestjs/common';
 import { ServiceController } from './controllers/service.controller';
 import { ServiceService } from './services/services.service';
-import { AdminReportController } from './controllers/admin-report.controller';
-import { AdminReportService } from './services/admin-report.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import adminServiceSchema from './entities/Services.entity';
-import { BookingModule } from '../../Booking/booking.module';
-import { BookingServiceService } from '../../Booking/booking-service/booking-service.service';
+import { CloudinaryModule } from 'src/features/cloudinary/cloudinary.module';
 
 @Module({
   imports:[
     MongooseModule.forFeature([{name:'AdminService', schema:adminServiceSchema}]),
-    BookingModule
+    CloudinaryModule,
   ],
-  controllers: [ServiceController, AdminReportController],
-  providers: [ServiceService, AdminReportService, BookingServiceService]
+  controllers: [ServiceController],
+  providers: [ServiceService]
 })
 export class ServiceModule {}

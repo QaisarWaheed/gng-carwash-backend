@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { VehicleService } from '../services/vehicle.service';
 import { AuthGuardWithRoles } from 'src/guards/authGuart';
 import { Roles } from 'src/decorators/Roles.decorator';
@@ -13,21 +14,8 @@ export class VehicleController {
 
     @Roles(Role.User)
     @Post()
-    async createVehicle(@Body() dto: CreateVehicleDto, @Req() req) {
-        console.log('createVehicle called with dto:', JSON.stringify(dto));
-        console.log('req.user:', req.user ? JSON.stringify({ _id: req.user._id, email: req.user.email }) : 'undefined');
-        if (!dto.customerId && req.user && req.user._id) {
-            dto.customerId = req.user._id.toString();
-            console.log('Set customerId to:', dto.customerId);
-        }
-        try {
-            const result = await this.vehicleService.createVehicle(dto);
-            console.log('Vehicle created successfully:', result.vehicle?.id);
-            return result;
-        } catch (error) {
-            console.error('Error in createVehicle controller:', error);
-            throw error;
-        }
+    async createVehicle(@Body() dto: CreateVehicleDto) {
+        return await this.vehicleService.createVehicle(dto);
     }
 
     @Roles(Role.Admin)
@@ -69,7 +57,8 @@ export class VehicleController {
 
     @Roles(Role.User)
     @Post(':id/photo')
-    async uploadVehiclePhoto(@Param('id') id: string, @Body() body: { photo: string }) {
-        return await this.vehicleService.uploadVehiclePhoto(id, body.photo);
+    @UseInterceptors(FileInterceptor('photo'))
+    async uploadVehiclePhoto(@Param('id') id: string, @UploadedFile() file: Express.Multer.File) {
+        return await this.vehicleService.uploadVehiclePhoto(id, file);
     }
 }

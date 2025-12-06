@@ -21,7 +21,6 @@ import { EmailService } from '../../../email/email.service';
 import { OtpService } from '../../../email/otp.service';
 import { GoogleVerificationService } from './google-verification.service';
 import { AppleVerificationService } from './apple-verification.service';
-import { Role } from 'src/types/enum.class';
 
 
 @Injectable()
@@ -146,7 +145,7 @@ export class UserAuthService {
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: 'a-string-secret-at-least-256-bits-long',
+      secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
     });
     return {
       success: true,
@@ -239,7 +238,7 @@ export class UserAuthService {
     return { success: true, message: 'Password changed successfully!' };
   }
 
-
+  //Employee and Manager
 
   async getAllUsers() {
     return await this.userAuthModel.find();
@@ -259,9 +258,9 @@ export class UserAuthService {
       const user = await this.userAuthModel.create(
         [
           {
-            fullName: dto.fullName,
+            name: dto.fullName,
             email: dto.email,
-            phoneNumber: dto.phoneNumber,
+            phone: dto.phoneNumber,
             password: hashedPassword,
             role: 'Employee',
           },
@@ -273,10 +272,10 @@ export class UserAuthService {
         [
           {
             userId: user[0]._id,
+            status: 'active',
             assignedBookings: [],
+            averageRating: 0,
             completedJobs: 0,
-            availabilitySlots: [],
-            reviews: [],
             flags: [],
           },
         ],
@@ -287,7 +286,7 @@ export class UserAuthService {
 
       return this.employeeModel
         .findById(employee[0]._id)
-        .populate('userId', 'fullName email role phoneNumber');
+        .populate('userId', 'name email role phone');
     } catch (error) {
 
       throw new BadRequestException(error.message);
@@ -310,7 +309,7 @@ export class UserAuthService {
     const saltOrRounds = 12;
     const hashedPassword = await bcrypt.hash(data.password, saltOrRounds);
     data.password = hashedPassword;
-    data.role = Role.Manager;
+    data.role = 'Manager';
 
     const newUser = this.userAuthModel.create(data);
 
@@ -380,7 +379,7 @@ export class UserAuthService {
     };
 
     const token = await this.jwtService.signAsync(payload, {
-      secret: this.configService.get<string>('JWT_SECRET'),
+      secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
     });
 
     return { token };
@@ -411,7 +410,7 @@ export class UserAuthService {
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
       });
 
       return {
@@ -463,7 +462,7 @@ export class UserAuthService {
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
       });
 
       return {
@@ -507,7 +506,7 @@ export class UserAuthService {
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
       });
 
       return {
@@ -574,7 +573,7 @@ export class UserAuthService {
       };
 
       const token = await this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: this.configService.get<string>('JWT_SECRET') || 'a-string-secret-at-least-256-bits-long',
       });
 
       return {
